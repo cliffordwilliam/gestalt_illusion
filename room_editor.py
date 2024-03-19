@@ -5,895 +5,347 @@ from sys import exit
 pg.init()
 
 # Constants
-TILE_SIZE = 16
-FPS = 60
+TILE_S = 16
+FONT_H = 5
+FONT_W = 3
+FONT = font.Font("cg_pixel_3x5_mono.ttf", FONT_H)
+EVENTS = [pg.KEYDOWN, pg.KEYUP, pg.MOUSEBUTTONDOWN, pg.MOUSEBUTTONUP, pg.QUIT]
+FPS = 30
 CLOCK = pg.time.Clock()
-NATIVE_RECT = pg.Rect(0, 0, 320, 176)
-RESOLUTION_SCALE = 5
-DISPLAY_SURFACE = pg.display.set_mode(
-    (
-        NATIVE_RECT.width * RESOLUTION_SCALE,
-        NATIVE_RECT.height * RESOLUTION_SCALE
-    )
-)
-DISPLAY_RECT = DISPLAY_SURFACE.get_rect()
-NATIVE_SURFACE = pg.Surface(
-    (
-        NATIVE_RECT.width,
-        NATIVE_RECT.height
-    )
-)
-ORIGIN_RECT = pg.Rect(0, 0, 2, 2)
-ORIGIN_RECT.center = (0, 0)
-FONT = font.Font(
-    "cg_pixel_3x5_mono.ttf",
-    5
-)
-SPRITE_SHEET_SURFACE = pg.image.load(
-    "stage_1_sprite_sheet.png"
-).convert_alpha()
-ALPHA_SPRITE_SHEET_SURFACE = pg.image.load(
-    "stage_1_sprite_sheet.png"
-).convert_alpha()
-ALPHA_SPRITE_SHEET_SURFACE.set_alpha(122)
-HORIZONTAL_TILES = 20
-TOTAL_TILES = 220
-CAM_FRECT = pg.FRect(0, 0, NATIVE_RECT.width, NATIVE_RECT.height)
-CAM_SPEED = 0.09
-CAM_LERP_WEIGHT = 0.2
-TILE_GRID_SURFACE = pg.Surface((320, 176))
-TILE_GRID_SURFACE.set_colorkey("red")
-TILE_GRID_SURFACE.set_alpha(10)
-ROOM_GRID_SURFACE = pg.Surface((320, 176))
-ROOM_GRID_SURFACE.set_colorkey("red")
-ROOM_GRID_SURFACE.set_alpha(20)
+NATIVE_W = 320
+NATIVE_H = 176
+NATIVE_W_TILE_UNIT = NATIVE_W // TILE_S
+NATIVE_H_TILE_UNIT = NATIVE_H // TILE_S
+NATIVE_SURF = pg.Surface((NATIVE_W, NATIVE_H))
+RESOLUTION = 5
+WINDOW_W = NATIVE_W * RESOLUTION
+WINDOW_H = NATIVE_H * RESOLUTION
+WINDOW_SURF = pg.display.set_mode((WINDOW_W, WINDOW_H))
+ORIGIN_SURF = pg.Surface((1, 1))
+ORIGIN_SURF.fill("red")
+V_SURF = pg.Surface((1, NATIVE_H))
+V_SURF.fill("grey12")
+H_SURF = pg.Surface((NATIVE_W, 1))
+H_SURF.fill("grey12")
+S_V_SURF = pg.Surface((1, NATIVE_H))
+S_V_SURF.fill("grey16")
+S_H_SURF = pg.Surface((NATIVE_W, 1))
+S_H_SURF.fill("grey16")
+CAM_RECT = pg.FRect(0, 0, NATIVE_W, NATIVE_H)
+CAM_SPD = 0.09
+CAM_LERP_FACTOR = 0.2
+BITMASK_BLINK_SURFACE = pg.Surface((TILE_S, TILE_S))
+BITMASK_BLINK_SURFACE.fill("grey100")
+CURSOR_RECT = pg.FRect(0, 0, TILE_S, TILE_S)
 
-# Cam movement
-cam_velocity = pg.math.Vector2()
-direction = pg.math.Vector2()
+# Bitmasks
+BITMASK_REGION_DICT = {
+    "floor": {
+        208: (320, 0, 16, 16),
+        248: (336, 0, 16, 16),
+        104: (352, 0, 16, 16),
+        64: (368, 0, 16, 16),
+        80: (384, 0, 16, 16),
+        120: (400, 0, 16, 16),
+        216: (416, 0, 16, 16),
+        72: (432, 0, 16, 16),
+        88: (448, 0, 16, 16),
+        219: (464, 0, 16, 16),
 
-# Menu state
-is_menu = False
+        214: (320, 16, 16, 16),
+        255: (336, 16, 16, 16),
+        107: (352, 16, 16, 16),
+        66: (368, 16, 16, 16),
+        86: (384, 16, 16, 16),
+        127: (400, 16, 16, 16),
+        223: (416, 16, 16, 16),
+        75: (432, 16, 16, 16),
+        95: (448, 16, 16, 16),
+        126: (464, 16, 16, 16),
 
+        22: (320, 32, 16, 16),
+        31: (336, 32, 16, 16),
+        11: (352, 32, 16, 16),
+        2: (368, 32, 16, 16),
+        210: (384, 32, 16, 16),
+        251: (400, 32, 16, 16),
+        254: (416, 32, 16, 16),
+        106: (432, 32, 16, 16),
+        250: (448, 32, 16, 16),
+        218: (464, 32, 16, 16),
+        122: (480, 32, 16, 16),
 
-class Sky():
-    def __init__(self, position):
-        self.name = "sky"
-        self.region = (0, 0, 320, 176)
-        self.frect = pg.FRect(
-            position[0],
-            position[1],
-            320,
-            176
-        )
+        16: (320, 48, 16, 16),
+        24: (336, 48, 16, 16),
+        8: (352, 48, 16, 16),
+        0: (368, 48, 16, 16),
+        18: (384, 48, 16, 16),
+        27: (400, 48, 16, 16),
+        30: (416, 48, 16, 16),
+        10: (432, 48, 16, 16),
+        26: (448, 48, 16, 16),
+        94: (464, 48, 16, 16),
+        91: (480, 48, 16, 16),
 
-    def draw(self):
-        draw_position_x = (self.frect.x - CAM_FRECT.x) * 0.05
-        draw_position_x = draw_position_x % 320
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x,
-                0
-            ),
-            self.region
-        )
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x - 320,
-                0
-            ),
-            self.region
-        )
+        82: (384, 64, 16, 16),
+        123: (400, 64, 16, 16),
+        222: (416, 64, 16, 16),
+        74: (432, 64, 16, 16),
+        90: (448, 64, 16, 16),
+    },
+    "rock": {
+        208: (320, 80, 16, 16),
+        248: (336, 80, 16, 16),
+        104: (352, 80, 16, 16),
+        64: (368, 80, 16, 16),
+        80: (384, 80, 16, 16),
+        120: (400, 80, 16, 16),
+        216: (416, 80, 16, 16),
+        72: (432, 80, 16, 16),
+        88: (448, 80, 16, 16),
+        219: (464, 80, 16, 16),
 
+        214: (320, 96, 16, 16),
+        255: (336, 96, 16, 16),
+        107: (352, 96, 16, 16),
+        66: (368, 96, 16, 16),
+        86: (384, 96, 16, 16),
+        127: (400, 96, 16, 16),
+        223: (416, 96, 16, 16),
+        75: (432, 96, 16, 16),
+        95: (448, 96, 16, 16),
+        126: (464, 96, 16, 16),
 
-class Cloud():
-    def __init__(self, position):
-        self.name = "cloud"
-        self.region = (0, 176, 320, 160)
-        self.frect = pg.FRect(
-            position[0],
-            position[1],
-            320,
-            160
-        )
+        22: (320, 112, 16, 16),
+        31: (336, 112, 16, 16),
+        11: (352, 112, 16, 16),
+        2: (368, 112, 16, 16),
+        210: (384, 112, 16, 16),
+        251: (400, 112, 16, 16),
+        254: (416, 112, 16, 16),
+        106: (432, 112, 16, 16),
+        250: (448, 112, 16, 16),
+        218: (464, 112, 16, 16),
+        122: (480, 112, 16, 16),
 
-    def draw(self):
-        draw_position_x = (self.frect.x - CAM_FRECT.x) * 0.1
-        draw_position_x = draw_position_x % 320
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x,
-                0
-            ),
-            self.region
-        )
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x - 320,
-                0
-            ),
-            self.region
-        )
+        16: (320, 128, 16, 16),
+        24: (336, 128, 16, 16),
+        8: (352, 128, 16, 16),
+        0: (368, 128, 16, 16),
+        18: (384, 128, 16, 16),
+        27: (400, 128, 16, 16),
+        30: (416, 128, 16, 16),
+        10: (432, 128, 16, 16),
+        26: (448, 128, 16, 16),
+        94: (464, 128, 16, 16),
+        91: (480, 128, 16, 16),
 
+        82: (384, 144, 16, 16),
+        123: (400, 144, 16, 16),
+        222: (416, 144, 16, 16),
+        74: (432, 144, 16, 16),
+        90: (448, 144, 16, 16),
+    },
+    "bg_rock": {
+        208: (320, 160, 16, 16),
+        248: (336, 160, 16, 16),
+        104: (352, 160, 16, 16),
+        64: (368, 160, 16, 16),
+        80: (384, 160, 16, 16),
+        120: (400, 160, 16, 16),
+        216: (416, 160, 16, 16),
+        72: (432, 160, 16, 16),
+        88: (448, 160, 16, 16),
+        219: (464, 160, 16, 16),
 
-class Trees():
-    def __init__(self, position):
-        self.name = "trees"
-        self.region = (320, 448, 80, 160)
-        self.frect = pg.FRect(
-            position[0],
-            position[1],
-            80,
-            160
-        )
+        214: (320, 176, 16, 16),
+        255: (336, 176, 16, 16),
+        107: (352, 176, 16, 16),
+        66: (368, 176, 16, 16),
+        86: (384, 176, 16, 16),
+        127: (400, 176, 16, 16),
+        223: (416, 176, 16, 16),
+        75: (432, 176, 16, 16),
+        95: (448, 176, 16, 16),
+        126: (464, 176, 16, 16),
 
-    def draw(self):
-        draw_position_x = (self.frect.x - CAM_FRECT.x) * 0.5
-        draw_position_x = draw_position_x % 320
-        # 1
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x,
-                32
-            ),
-            self.region
-        )
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x - 320,
-                32
-            ),
-            self.region
-        )
-        # 2
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x + 112,
-                64
-            ),
-            self.region
-        )
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x - 320 + 112,
-                64
-            ),
-            self.region
-        )
-        # 3
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x + 176,
-                32
-            ),
-            self.region
-        )
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x - 320 + 176,
-                32
-            ),
-            self.region
-        )
-        # 4
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x + 240,
-                16
-            ),
-            self.region
-        )
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x - 320 + 240,
-                16
-            ),
-            self.region
-        )
+        22: (320, 192, 16, 16),
+        31: (336, 192, 16, 16),
+        11: (352, 192, 16, 16),
+        2: (368, 192, 16, 16),
+        210: (384, 192, 16, 16),
+        251: (400, 192, 16, 16),
+        254: (416, 192, 16, 16),
+        106: (432, 192, 16, 16),
+        250: (448, 192, 16, 16),
+        218: (464, 192, 16, 16),
+        122: (480, 192, 16, 16),
 
+        16: (320, 208, 16, 16),
+        24: (336, 208, 16, 16),
+        8: (352, 208, 16, 16),
+        0: (368, 208, 16, 16),
+        18: (384, 208, 16, 16),
+        27: (400, 208, 16, 16),
+        30: (416, 208, 16, 16),
+        10: (432, 208, 16, 16),
+        26: (448, 208, 16, 16),
+        94: (464, 208, 16, 16),
+        91: (480, 208, 16, 16),
 
-class Glow():
-    def __init__(self, position):
-        self.name = "glow"
-        self.region = (0, 512, 320, 128)
-        self.frect = pg.FRect(
-            position[0],
-            position[1],
-            320,
-            128
-        )
+        82: (384, 224, 16, 16),
+        123: (400, 224, 16, 16),
+        222: (416, 224, 16, 16),
+        74: (432, 224, 16, 16),
+        90: (448, 224, 16, 16),
+    }
+}
 
-    def draw(self):
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                0,
-                48
-            ),
-            self.region
-        )
+# Sprite sheet setting
+SPRITE_SHEET_PNG_NAME = "stage_1_sprite_sheet.png"
+SPRITE_SHEET_SURF = pg.image.load(SPRITE_SHEET_PNG_NAME).convert_alpha()
+CURSOR_SPRITE_SHEET_SURF = pg.image.load(SPRITE_SHEET_PNG_NAME).convert_alpha()
+CURSOR_SPRITE_SHEET_SURF.set_alpha(122)
+collision = [0 for _ in range(NATIVE_W_TILE_UNIT * NATIVE_H_TILE_UNIT)]
+PAGE_1_COLLISION = collision.copy()
+PAGE_1_SURF = pg.Surface((NATIVE_W, NATIVE_H))
+PAGE_1_SURF.blits([
+    (SPRITE_SHEET_SURF, (TILE_S, TILE_S), (368, 48, TILE_S, TILE_S)),
+    (SPRITE_SHEET_SURF, (3*TILE_S, TILE_S), (368, 128, TILE_S, TILE_S)),
+])
+PAGE_1_COLLISION = collision.copy()
+PAGE_1_COLLISION[1 * NATIVE_W_TILE_UNIT +
+                 1] = {"name": "floor", "region": (368, 48, TILE_S, TILE_S), "room": 11}
+PAGE_1_COLLISION[1 * NATIVE_W_TILE_UNIT +
+                 3] = {"name": "rock", "region": (368, 128, TILE_S, TILE_S), "room": 11}
 
-
-class Floor():
-    def __init__(self, position):
-        self.name = "floor"
-        self.frect = pg.FRect(
-            position[0],
-            position[1],
-            16,
-            16
-        )
-        self.preview_frect = pg.FRect(
-            position[0],
-            position[1],
-            16,
-            16
-        )
-        self.highlight_frect = self.frect.inflate(8, 8)
-        self.frames_dict = {
-            208: (320, 0, 16, 16),
-            248: (336, 0, 16, 16),
-            104: (352, 0, 16, 16),
-            64: (368, 0, 16, 16),
-            80: (384, 0, 16, 16),
-            120: (400, 0, 16, 16),
-            216: (416, 0, 16, 16),
-            72: (432, 0, 16, 16),
-            88: (448, 0, 16, 16),
-            219: (464, 0, 16, 16),
-
-            214: (320, 16, 16, 16),
-            255: (336, 16, 16, 16),
-            107: (352, 16, 16, 16),
-            66: (368, 16, 16, 16),
-            86: (384, 16, 16, 16),
-            127: (400, 16, 16, 16),
-            223: (416, 16, 16, 16),
-            75: (432, 16, 16, 16),
-            95: (448, 16, 16, 16),
-            126: (464, 16, 16, 16),
-
-            22: (320, 32, 16, 16),
-            31: (336, 32, 16, 16),
-            11: (352, 32, 16, 16),
-            2: (368, 32, 16, 16),
-            210: (384, 32, 16, 16),
-            251: (400, 32, 16, 16),
-            254: (416, 32, 16, 16),
-            106: (432, 32, 16, 16),
-            250: (448, 32, 16, 16),
-            218: (464, 32, 16, 16),
-            122: (480, 32, 16, 16),
-
-            16: (320, 48, 16, 16),
-            24: (336, 48, 16, 16),
-            8: (352, 48, 16, 16),
-            0: (368, 48, 16, 16),
-            18: (384, 48, 16, 16),
-            27: (400, 48, 16, 16),
-            30: (416, 48, 16, 16),
-            10: (432, 48, 16, 16),
-            26: (448, 48, 16, 16),
-            94: (464, 48, 16, 16),
-            91: (480, 48, 16, 16),
-
-            82: (384, 64, 16, 16),
-            123: (400, 64, 16, 16),
-            222: (416, 64, 16, 16),
-            74: (432, 64, 16, 16),
-            90: (448, 64, 16, 16),
-        }
-        self.frame_mask_key = 0
-
-    def global_draw(self, dt):
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                self.frect.x,
-                self.frect.y
-            ),
-            self.frames_dict[self.frame_mask_key]
-        )
-        pg.draw.rect(
-            NATIVE_SURFACE,
-            "grey20",
-            self.highlight_frect,
-            1
-        )
-
-    def draw_rect(self):
-        pg.draw.rect(
-            NATIVE_SURFACE,
-            "white",
-            self.highlight_frect,
-            1
-        )
-
-    def draw(self, dt):
-        draw_position_x = self.frect.x - CAM_FRECT.x
-        draw_position_y = self.frect.y - CAM_FRECT.y
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x,
-                draw_position_y
-            ),
-            self.frames_dict[self.frame_mask_key]
-        )
-
-    def draw_preview(self, dt, position):
-        NATIVE_SURFACE.blit(
-            ALPHA_SPRITE_SHEET_SURFACE,
-            position,
-            self.frames_dict[0]
-        )
-        self.preview_frect.x = position[0]
-        self.preview_frect.y = position[1]
-        pg.draw.rect(
-            NATIVE_SURFACE,
-            "red",
-            self.preview_frect,
-            1
-        )
-
-
-class Stone():
-    def __init__(self, position):
-        self.name = "stone"
-        self.frect = pg.FRect(
-            position[0],
-            position[1],
-            16,
-            16
-        )
-        self.preview_frect = pg.FRect(
-            position[0],
-            position[1],
-            16,
-            16
-        )
-        self.highlight_frect = self.frect.inflate(8, 8)
-        self.frames_dict = {
-            208: (320, 80, 16, 16),
-            248: (336, 80, 16, 16),
-            104: (352, 80, 16, 16),
-            64: (368, 80, 16, 16),
-            80: (384, 80, 16, 16),
-            120: (400, 80, 16, 16),
-            216: (416, 80, 16, 16),
-            72: (432, 80, 16, 16),
-            88: (448, 80, 16, 16),
-            219: (464, 80, 16, 16),
-
-            214: (320, 96, 16, 16),
-            255: (336, 96, 16, 16),
-            107: (352, 96, 16, 16),
-            66: (368, 96, 16, 16),
-            86: (384, 96, 16, 16),
-            127: (400, 96, 16, 16),
-            223: (416, 96, 16, 16),
-            75: (432, 96, 16, 16),
-            95: (448, 96, 16, 16),
-            126: (464, 96, 16, 16),
-
-            22: (320, 112, 16, 16),
-            31: (336, 112, 16, 16),
-            11: (352, 112, 16, 16),
-            2: (368, 112, 16, 16),
-            210: (384, 112, 16, 16),
-            251: (400, 112, 16, 16),
-            254: (416, 112, 16, 16),
-            106: (432, 112, 16, 16),
-            250: (448, 112, 16, 16),
-            218: (464, 112, 16, 16),
-            122: (480, 112, 16, 16),
-
-            16: (320, 128, 16, 16),
-            24: (336, 128, 16, 16),
-            8: (352, 128, 16, 16),
-            0: (368, 128, 16, 16),
-            18: (384, 128, 16, 16),
-            27: (400, 128, 16, 16),
-            30: (416, 128, 16, 16),
-            10: (432, 128, 16, 16),
-            26: (448, 128, 16, 16),
-            94: (464, 128, 16, 16),
-            91: (480, 128, 16, 16),
-
-            82: (384, 144, 16, 16),
-            123: (400, 144, 16, 16),
-            222: (416, 144, 16, 16),
-            74: (432, 144, 16, 16),
-            90: (448, 144, 16, 16),
-        }
-        self.frame_mask_key = 0
-
-    def global_draw(self, dt):
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                self.frect.x,
-                self.frect.y
-            ),
-            self.frames_dict[self.frame_mask_key]
-        )
-        pg.draw.rect(
-            NATIVE_SURFACE,
-            "grey20",
-            self.highlight_frect,
-            1
-        )
-
-    def draw_rect(self):
-        pg.draw.rect(
-            NATIVE_SURFACE,
-            "white",
-            self.highlight_frect,
-            1
-        )
-
-    def draw(self, dt):
-        draw_position_x = self.frect.x - CAM_FRECT.x
-        draw_position_y = self.frect.y - CAM_FRECT.y
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x,
-                draw_position_y
-            ),
-            self.frames_dict[self.frame_mask_key]
-        )
-
-    def draw_preview(self, dt, position):
-        NATIVE_SURFACE.blit(
-            ALPHA_SPRITE_SHEET_SURFACE,
-            position,
-            self.frames_dict[0]
-        )
-        self.preview_frect.x = position[0]
-        self.preview_frect.y = position[1]
-        pg.draw.rect(
-            NATIVE_SURFACE,
-            "red",
-            self.preview_frect,
-            1
-        )
-
-
-class Scone():
-    def __init__(self, position):
-        self.name = "scone"
-        self.frect = pg.FRect(
-            position[0],
-            position[1],
-            16,
-            16
-        )
-        self.preview_frect = pg.FRect(
-            position[0],
-            position[1],
-            16,
-            48
-        )
-        self.highlight_frect = self.frect.inflate(8, 8)
-        self.body_region = (416, 368, 16, 32)
-        self.frames_list = [
-            (336, 400, 16, 16),
-            (352, 400, 16, 16),
-            (368, 400, 16, 16),
-            (384, 400, 16, 16),
-            (400, 400, 16, 16),
-            (416, 400, 16, 16),
-            (432, 400, 16, 16),
-            (448, 400, 16, 16),
-            (464, 400, 16, 16),
-            (480, 400, 16, 16),
-            (336, 416, 16, 16),
-            (352, 416, 16, 16),
-            (368, 416, 16, 16),
-            (384, 416, 16, 16),
-            (400, 416, 16, 16),
-            (416, 416, 16, 16),
-        ]
-        self.frame_mask_key = 0
-        self.total_dt = 0
-        self.frame_index = 0
-
-    def global_draw(self, dt):
-        self.total_dt += dt
-        if self.total_dt >= 100:
-            self.total_dt = 0
-            self.frame_index += 1
-            if self.frame_index > len(self.frames_list) - 1:
-                self.frame_index = 0
-        NATIVE_SURFACE.blit(
-            # Flame
-            SPRITE_SHEET_SURFACE,
-            (
-                self.frect.x,
-                self.frect.y
-            ),
-            self.frames_list[self.frame_index]
-        )
-        pg.draw.rect(
-            NATIVE_SURFACE,
-            "grey20",
-            self.highlight_frect,
-            1
-        )
-
-    def draw_rect(self):
-        pg.draw.rect(
-            NATIVE_SURFACE,
-            "white",
-            self.highlight_frect,
-            1
-        )
-
-    def draw(self, dt):
-        self.total_dt += dt
-        if self.total_dt >= 100:
-            self.total_dt = 0
-            self.frame_index += 1
-            if self.frame_index > len(self.frames_list) - 1:
-                self.frame_index = 0
-        draw_position_x = self.frect.x - CAM_FRECT.x
-        draw_position_y = self.frect.y - CAM_FRECT.y
-        # Flame
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x,
-                draw_position_y - 32
-            ),
-            self.frames_list[self.frame_index]
-        )
-        # Body
-        NATIVE_SURFACE.blit(
-            SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x,
-                draw_position_y - 16
-            ),
-            self.body_region
-        )
-
-    def draw_preview(self, dt, position):
-        self.total_dt += dt
-        if self.total_dt >= 100:
-            self.total_dt = 0
-            self.frame_index += 1
-            if self.frame_index > len(self.frames_list) - 1:
-                self.frame_index = 0
-        draw_position_x = position[0]
-        draw_position_y = position[1]
-        # Flame
-        NATIVE_SURFACE.blit(
-            ALPHA_SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x,
-                draw_position_y - 32
-            ),
-            self.frames_list[self.frame_index]
-        )
-        # Body
-        NATIVE_SURFACE.blit(
-            ALPHA_SPRITE_SHEET_SURFACE,
-            (
-                draw_position_x,
-                draw_position_y - 16
-            ),
-            self.body_region
-        )
-        self.preview_frect.x = position[0]
-        self.preview_frect.y = position[1] - 32
-        pg.draw.rect(
-            NATIVE_SURFACE,
-            "red",
-            self.preview_frect,
-            1
-        )
-
-
-# Preview
-floor = Floor((0, 0))
-stone = Stone((0, 0))
-scone = Scone((0, 0))
-
-# Sky sprite
-sky = Sky((0, 0))
-
-# Cloud sprite
-cloud = Cloud((0, 0))
-
-# Trees sprite
-trees = Trees((0, 0))
-
-# Glow sprite
-glow = Glow((0, 0))
-
-
-# Menu page 1
-menu_collisions_list_1 = []
-for _ in range(TOTAL_TILES):
-    menu_collisions_list_1.append(0)
-
-# Add floor
-x = 1
-y = 1
-sprite = Floor(
-    (
-        x * TILE_SIZE,
-        y * TILE_SIZE
-    )
-)
-menu_collisions_list_1[y * HORIZONTAL_TILES + x] = sprite
-
-# Add stone
-x = 3
-y = 1
-sprite = Stone(
-    (
-        x * TILE_SIZE,
-        y * TILE_SIZE
-    )
-)
-menu_collisions_list_1[y * HORIZONTAL_TILES + x] = sprite
-
-# Menu page 2
-menu_collisions_list_2 = []
-for _ in range(TOTAL_TILES):
-    menu_collisions_list_2.append(0)
-
-# Add scone
-x = 1
-y = 1
-sprite = Scone(
-    (
-        x * TILE_SIZE,
-        y * TILE_SIZE
-    )
-)
-menu_collisions_list_2[y * HORIZONTAL_TILES + x] = sprite
-
-#  Menu pages
-menu_pages_list = [
-    menu_collisions_list_1,
-    menu_collisions_list_2
+PAGE_2_SURF = pg.Surface((NATIVE_W, NATIVE_H))
+PAGE_2_SURF.blits([
+    (SPRITE_SHEET_SURF, (TILE_S, TILE_S), (368, 208, TILE_S, TILE_S)),
+])
+PAGE_2_COLLISION = collision.copy()
+PAGE_2_COLLISION[1 * NATIVE_W_TILE_UNIT +
+                 1] = {"name": "bg_rock", "region": (368, 208, TILE_S, TILE_S), "room": 0}
+PAGE_SURFS = [
+    PAGE_1_SURF,
+    PAGE_2_SURF
 ]
-menu_page_index = 0
+PAGES_INDEX_LEN = len(PAGE_SURFS) - 1
+PAGE_COLLISIONS = [
+    PAGE_1_COLLISION,
+    PAGE_2_COLLISION
+]
 
-# Room settings
+# Room setting
 ROOM_TL_ROOM_UNIT = (0, 0)
 ROOM_SCALE = (1, 1)
-ROOM_W_TILE_UNIT = 20 * ROOM_SCALE[0]
-ROOM_H_TILE_UNIT = 11 * ROOM_SCALE[1]
-ROOM_TL_TILE_UNIT = (
-    ROOM_TL_ROOM_UNIT[0] * 20,
-    ROOM_TL_ROOM_UNIT[1] * 11
-)
-ROOM_TL = (
-    ROOM_TL_ROOM_UNIT[0] * 320,
-    ROOM_TL_ROOM_UNIT[1] * 176
-)
-ROOM_W = ROOM_W_TILE_UNIT * TILE_SIZE
-ROOM_H = ROOM_H_TILE_UNIT * TILE_SIZE
-ROOM_FRECT = pg.FRect(
-    ROOM_TL[0],
-    ROOM_TL[1],
+ROOM_W_TILE_UNIT = NATIVE_W_TILE_UNIT * ROOM_SCALE[0]
+ROOM_H_TILE_UNIT = NATIVE_H_TILE_UNIT * ROOM_SCALE[1]
+ROOM_X_TILE_UNIT = ROOM_TL_ROOM_UNIT[0] * NATIVE_W_TILE_UNIT
+ROOM_Y_TILE_UNIT = ROOM_TL_ROOM_UNIT[1] * NATIVE_H_TILE_UNIT
+ROOM_X = ROOM_X_TILE_UNIT * TILE_S
+ROOM_Y = ROOM_Y_TILE_UNIT * TILE_S
+ROOM_W = ROOM_W_TILE_UNIT * TILE_S
+ROOM_H = ROOM_H_TILE_UNIT * TILE_S
+ROOM_RECT = pg.FRect(
+    ROOM_X,
+    ROOM_Y,
     ROOM_W,
     ROOM_H
 )
-CAM_FRECT.topleft = ROOM_TL
-room = []
-total = ROOM_W_TILE_UNIT * ROOM_H_TILE_UNIT
-for _ in range(total):
-    room.append(0)
+ROOM_SURF = pg.Surface((ROOM_W, ROOM_H))
+ROOM_SURF.fill("grey4")
+CAM_RECT.topleft = (ROOM_X, ROOM_Y)
+room = [0 for _ in range(ROOM_W_TILE_UNIT * ROOM_H_TILE_UNIT)]
 ROOMS_LIST = [
-    room.copy(),  # 0 - tall_bush
-    room.copy(),  # 1 - short_bush
-    room.copy(),  # 2 - rocks
-    room.copy(),  # 3 - wall
-    room.copy(),  # 4 - furniture
-    room.copy(),  # 5 - small_trees
+    room.copy(),  # 0 - bg_rocks
+    room.copy(),  # 1 - tall_bush
+    room.copy(),  # 2 - short_bush
+    room.copy(),  # 3 - boulders
+    room.copy(),  # 4 - small_trees
+    room.copy(),  # 5 - wall
     room.copy(),  # 6 - pillar
-    room.copy(),  # 7 - thin
+    room.copy(),  # 7 - blinder
     room.copy(),  # 8 - scones
-    room.copy(),  # 9 - balcony
-    room.copy(),  # 10 - floor
-    room.copy(),  # 11 - grass
-    room.copy(),  # 12 - water
+    room.copy(),  # 9 - thin
+    room.copy(),  # 10 - balcony
+    room.copy(),  # 11 - floor
+    room.copy(),  # 12 - grass
+    room.copy(),  # 13 - water
 ]
+selected_room = ROOMS_LIST[11]
 
-selected_sprite = "floor"
-
-
-def draw_grid():
-    # Clear tile grid surface
-    TILE_GRID_SURFACE.fill("red")
-
-    # Horizontal tile grid lines
-    for i in range(20):
-        line_position_x = -1 - CAM_FRECT.x + (TILE_SIZE * i)
-        line_position_x = line_position_x % NATIVE_RECT.width
-        pg.draw.line(
-            TILE_GRID_SURFACE,
-            "grey96",
-            (line_position_x, NATIVE_RECT.top),
-            (line_position_x, NATIVE_RECT.bottom),
-            2
-        )
-
-    # Vertical tile grid lines
-    for i in range(20):
-        line_position_y = -1 - CAM_FRECT.y + (TILE_SIZE * i)
-        line_position_y = line_position_y % NATIVE_RECT.height
-        pg.draw.line(
-            TILE_GRID_SURFACE,
-            "grey96",
-            (NATIVE_RECT.left, line_position_y),
-            (NATIVE_RECT.right, line_position_y),
-            2
-        )
-
-    # Draw tile grid surface to native
-    NATIVE_SURFACE.blit(
-        TILE_GRID_SURFACE,
-        (0, 0)
-    )
-
-    # Clear room grid surface
-    ROOM_GRID_SURFACE.fill("red")
-
-    # Horizontal room grid lines
-    line_position_x = -1 - CAM_FRECT.x
-    line_position_x = line_position_x % NATIVE_RECT.width
-    pg.draw.line(
-        ROOM_GRID_SURFACE,
-        "grey92",
-        (line_position_x, NATIVE_RECT.top),
-        (line_position_x, NATIVE_RECT.bottom),
-        2
-    )
-
-    # Vertical room grid lines
-    line_position_y = -1 - CAM_FRECT.y
-    line_position_y = line_position_y % NATIVE_RECT.height
-    pg.draw.line(
-        ROOM_GRID_SURFACE,
-        "grey92",
-        (NATIVE_RECT.left, line_position_y),
-        (NATIVE_RECT.right, line_position_y),
-        2
-    )
-
-    # Draw room grid surface to native
-    NATIVE_SURFACE.blit(
-        ROOM_GRID_SURFACE,
-        (0, 0)
-    )
-
-    # Draw origin
-    ORIGIN_RECT.x = -1 - CAM_FRECT.x
-    ORIGIN_RECT.y = -1 - CAM_FRECT.y
-    pg.draw.rect(
-        NATIVE_SURFACE,
-        "red",
-        ORIGIN_RECT,
-        1
-    )
-
-    # Room rect draw
-    ROOM_FRECT.x = ROOM_TL[0] - CAM_FRECT.x
-    ROOM_FRECT.y = ROOM_TL[1] - CAM_FRECT.y
-    pg.draw.rect(
-        NATIVE_SURFACE,
-        "red",
-        ROOM_FRECT,
-        1
-    )
-
-    # Horizontal ruler text
-    ruler_x_text = int(CAM_FRECT.x // NATIVE_RECT.width) + 1
-    rulex_x_rect = FONT.get_rect(f"{ruler_x_text}")
-    rulex_x_rect.midtop = (line_position_x, 5)
-    FONT.render_to(
-        NATIVE_SURFACE,
-        (
-            rulex_x_rect.x,
-            rulex_x_rect.y
-        ),
-        f"{ruler_x_text}",
-        "white"
-    )
-
-    # Vertical ruler text
-    ruler_y_text = int(CAM_FRECT.y // NATIVE_RECT.height) + 1
-    ruler_y_rect = FONT.get_rect(f"{ruler_y_text}")
-    ruler_y_rect.midleft = (3, line_position_y)
-    FONT.render_to(
-        NATIVE_SURFACE,
-        (
-            ruler_y_rect.x,
-            ruler_y_rect.y
-        ),
-        f"{ruler_y_text}",
-        "white"
-    )
+# Menu
+is_menu = False
+selected_name = "floor"
+selected_region = (368, 48, TILE_S, TILE_S)
+page_index = 0
+selected_page_surface = PAGE_SURFS[page_index]
+selected_page_collision = PAGE_COLLISIONS[page_index]
+selected_bitmask_region = BITMASK_REGION_DICT[selected_name]
 
 
-def update_camera_position(direction, cam_velocity, CAM_FRECT, dt, CAM_SPEED, CAM_LERP_WEIGHT):
-    # Update cam direction
-    direction.x = pg.key.get_pressed()[pg.K_d] - pg.key.get_pressed()[pg.K_a]
-    direction.y = pg.key.get_pressed()[pg.K_s] - pg.key.get_pressed()[pg.K_w]
-    if direction.length() != 0:
-        direction = direction.normalize()
+# Input
+is_w_pressed = 0
+is_a_pressed = 0
+is_s_pressed = 0
+is_d_pressed = 0
+is_lmb_pressed = False
+is_rmb_pressed = False
 
-    # Update cam velocity with cam direction
-    cam_velocity = cam_velocity.smoothstep(
-        direction * CAM_SPEED, CAM_LERP_WEIGHT
-    )
-    if cam_velocity.length() < 0.001:
-        cam_velocity.x = 0
-        cam_velocity.y = 0
-
-    # Update cam position with cam velocity
-    CAM_FRECT.topleft += cam_velocity * dt
-
-    return direction, cam_velocity, CAM_FRECT
+# Cam
+cam_dir = pg.math.Vector2(0, 0)
+cam_vel = pg.math.Vector2(0, 0)
 
 
-def update_bitmasks(tile, position_tile_unit, last=False):
+def update_bitmasks(position_tile_unit, draw_position, last=False):
+    # Create a blink effect on tile that mask about to change
+    NATIVE_SURF.blit(BITMASK_BLINK_SURFACE,
+                     (draw_position[0] - CAM_RECT.x, draw_position[1] - CAM_RECT.y))
+
     # Raw bits
     br, b, bl, r, l, tr, t, tl = 0, 0, 0, 0, 0, 0, 0, 0
 
     x = position_tile_unit[0]
     y = position_tile_unit[1]
-    neighbour_tile_units = [
+    neighbour_pos_tile_units = [
         (x - 1, y - 1), (x - 0, y - 1), (x + 1, y - 1),
         (x - 1, y - 0),                 (x + 1, y - 0),
         (x - 1, y + 1), (x - 0, y + 1), (x + 1, y + 1)
     ]
-    for pos in neighbour_tile_units:
+    for pos in neighbour_pos_tile_units:
         # Get tile from map
-        if (0 <= pos[0] < ROOM_W_TILE_UNIT) and (0 <= pos[1] < ROOM_H_TILE_UNIT):
-            neighbour = ROOMS_LIST[10][
-                pos[1] * ROOM_W_TILE_UNIT + pos[0]]
+        neighbour_pos_tile_unit_x = pos[0]
+        neighbour_pos_tile_unit_y = pos[1]
+        if (0 <= neighbour_pos_tile_unit_x < ROOM_W_TILE_UNIT) and (0 <= neighbour_pos_tile_unit_y < ROOM_H_TILE_UNIT):
+            neighbour = selected_room[
+                neighbour_pos_tile_unit_y * ROOM_W_TILE_UNIT + neighbour_pos_tile_unit_x]
 
             # Air? check other position
             if neighbour == 0:
                 continue
 
+            # Found neighbour
+            neighbour_draw_pos = neighbour["pos"]
+
             # Tell my neighbour to update their frame index
             if last == False:
                 update_bitmasks(
-                    neighbour,
-                    pos,
+                    (neighbour_pos_tile_unit_x, neighbour_pos_tile_unit_y),
+                    (neighbour_draw_pos[0], neighbour_draw_pos[1]),
                     last=True
                 )
 
-            dx = neighbour.frect.x - tile.frect.x
-            dy = neighbour.frect.y - tile.frect.y
-            t += dx == 0 and dy == -TILE_SIZE
-            r += dx == TILE_SIZE and dy == 0
-            b += dx == 0 and dy == TILE_SIZE
-            l += dx == -TILE_SIZE and dy == 0
-            br += dx == TILE_SIZE and dy == TILE_SIZE
-            bl += dx == -TILE_SIZE and dy == TILE_SIZE
-            tr += dx == TILE_SIZE and dy == -TILE_SIZE
-            tl += dx == -TILE_SIZE and dy == -TILE_SIZE
+            dx = neighbour_pos_tile_unit_x - x
+            dy = neighbour_pos_tile_unit_y - y
+            t += dx == 0 and dy == -1
+            r += dx == 1 and dy == 0
+            b += dx == 0 and dy == 1
+            l += dx == -1 and dy == 0
+            br += dx == 1 and dy == 1
+            bl += dx == -1 and dy == 1
+            tr += dx == 1 and dy == -1
+            tl += dx == -1 and dy == -1
     tr = tr and t and r
     tl = tl and t and l
     br = br and b and r
@@ -901,12 +353,15 @@ def update_bitmasks(tile, position_tile_unit, last=False):
     mask_id = (br << 7) | (b << 6) | (bl << 5) | (
         r << 4) | (l << 3) | (tr << 2) | (t << 1) | tl
 
-    # Update frame index with cooked bitmask
-    if mask_id != 0:
-        tile.frame_mask_key = mask_id
+    # Update region of this tile position with cooked bitmask
+    tile = selected_room[y * ROOM_W_TILE_UNIT + x]
 
+    # In case this tile is from deleted
+    if tile != 0:
+        new_region = BITMASK_REGION_DICT[tile["name"]][mask_id]
+        selected_room[y * NATIVE_W_TILE_UNIT +
+                      x] = {"pos": draw_position, "region": new_region, "name": tile["name"]}
 
-is_lmb_pressed = False
 
 # Main loop
 while 1:
@@ -914,182 +369,201 @@ while 1:
     dt = CLOCK.tick(FPS)
 
     # Get event
-    for event in pg.event.get():
+    for event in pg.event.get(EVENTS):
+        # Window quit
         if event.type == pg.QUIT:
             pg.quit()
             exit()
 
+        # Key down
+        if event.type == pg.KEYDOWN:
+            # Normal state
+            if not is_menu:
+                if event.key == pg.K_w:
+                    is_w_pressed = 1
+                if event.key == pg.K_a:
+                    is_a_pressed = 1
+                if event.key == pg.K_s:
+                    is_s_pressed = 1
+                if event.key == pg.K_d:
+                    is_d_pressed = 1
+                if event.key == pg.K_SPACE:
+                    is_menu = True
+
+            # Menu state
+            else:
+                if event.key == pg.K_a:
+                    page_index -= 1
+                    page_index = max(page_index, 0)
+                    selected_page_surface = PAGE_SURFS[page_index]
+                    selected_page_collision = PAGE_COLLISIONS[page_index]
+                if event.key == pg.K_d:
+                    page_index += 1
+                    page_index = min(page_index, PAGES_INDEX_LEN)
+                    selected_page_surface = PAGE_SURFS[page_index]
+                    selected_page_collision = PAGE_COLLISIONS[page_index]
+                if event.key == pg.K_SPACE:
+                    is_menu = False
+
+        # Key up
+        if event.type == pg.KEYUP:
+            # Normal state
+            if not is_menu:
+                if event.key == pg.K_w:
+                    is_w_pressed = 0
+                if event.key == pg.K_a:
+                    is_a_pressed = 0
+                if event.key == pg.K_s:
+                    is_s_pressed = 0
+                if event.key == pg.K_d:
+                    is_d_pressed = 0
+
+            # Menu state
+            else:
+                pass
+
+        # Mouse down
         if event.type == pg.MOUSEBUTTONDOWN:
-            # Lmb
-            if event.button == 1:
-                is_lmb_pressed = True
+            # Normal state
+            if not is_menu:
+                if event.button == 1:
+                    is_lmb_pressed = True
+                if event.button == 3:
+                    is_rmb_pressed = True
 
-        elif event.type == pg.MOUSEBUTTONUP:
-            # Lmb
-            if event.button == 1:
-                is_lmb_pressed = False
-                # Menu state
-                if is_menu:
-                    # Lmb
-                    if event.button == 1:
-                        pos = pg.mouse.get_pos()
-                        pos = (
-                            pos[0] // RESOLUTION_SCALE // TILE_SIZE,
-                            pos[1] // RESOLUTION_SCALE // TILE_SIZE
-                        )
-                        cell = menu_pages_list[menu_page_index][
-                            pos[1] * HORIZONTAL_TILES + pos[0]
-                        ]
-                        selected_sprite = cell.name
-                        is_menu = not is_menu
+            # Menu state
+            else:
+                pass
 
-    # Toggle menu
-    if pg.key.get_just_pressed()[pg.K_q]:
-        is_menu = not is_menu
+        # Mouse up
+        if event.type == pg.MOUSEBUTTONUP:
+            # Normal state
+            if not is_menu:
+                if event.button == 1:
+                    is_lmb_pressed = False
+                if event.button == 3:
+                    is_rmb_pressed = False
 
-    # Clear draw
-    NATIVE_SURFACE.fill("grey0")
+            # Menu state
+            else:
+                pos = pg.mouse.get_pos()
+                pos_x = pos[0] // RESOLUTION
+                pos_y = pos[1] // RESOLUTION
+                pos_tile_x = pos_x // TILE_S
+                pos_tile_y = pos_y // TILE_S
+                item = selected_page_collision[pos_tile_y *
+                                               NATIVE_W_TILE_UNIT + pos_tile_x]
+                if item != 0:
+                    selected_name = item["name"]
+                    selected_region = item["region"]
+                    selected_room = ROOMS_LIST[item["room"]]
+                    if selected_name in ["floor", "rock", "bg_rock"]:
+                        selected_bitmask_region = BITMASK_REGION_DICT[selected_name]
+                    is_menu = False
 
     # Menu state
     if is_menu:
-        # draw menu items
-        for cell in menu_pages_list[menu_page_index]:
-            if cell == 0:
-                continue
-            cell.global_draw(dt)
+        # Clear
+        NATIVE_SURF.fill("grey0")
 
-        # Cycle menu pages
-        menu_page_index += pg.key.get_just_pressed(
-        )[pg.K_d] - pg.key.get_just_pressed()[pg.K_a]
-        menu_page_index = menu_page_index % len(menu_pages_list)
-
-        # Draw rect on hover
-        pos = pg.mouse.get_pos()
-        pos = (
-            pos[0] // RESOLUTION_SCALE // TILE_SIZE,
-            pos[1] // RESOLUTION_SCALE // TILE_SIZE
-        )
-        cell = menu_pages_list[menu_page_index][
-            pos[1] * HORIZONTAL_TILES + pos[0]
-        ]
-        pg.mouse.set_cursor(pg.SYSTEM_CURSOR_ARROW)
-        if cell != 0:
-            cell.draw_rect()
-            pg.mouse.set_cursor(pg.SYSTEM_CURSOR_HAND)
+        # Draw selected page
+        NATIVE_SURF.blit(selected_page_surface, (0, 0))
 
     # Normal state
     else:
-        # Update camera position
-        direction, cam_velocity, CAM_FRECT = update_camera_position(
-            direction, cam_velocity, CAM_FRECT, dt, CAM_SPEED, CAM_LERP_WEIGHT
+        # Clear
+        NATIVE_SURF.fill("grey12")
+
+        # Draw room
+        room_draw_pos_x = ROOM_RECT.x - CAM_RECT.x
+        room_draw_pos_y = ROOM_RECT.y - CAM_RECT.y
+        NATIVE_SURF.blit(ROOM_SURF, (room_draw_pos_x, room_draw_pos_y))
+
+        # Draw grid
+        for i in range(NATIVE_W_TILE_UNIT):
+            offset = TILE_S * i
+            x = (-CAM_RECT.x + (offset)) % NATIVE_W
+            y = (-CAM_RECT.y + (offset)) % NATIVE_H
+            NATIVE_SURF.blits([(V_SURF, (x, 0)), (H_SURF, (0, y))])
+        x = -CAM_RECT.x % NATIVE_W
+        y = -CAM_RECT.y % NATIVE_H
+        NATIVE_SURF.blits([(S_V_SURF, (x, 0)), (S_H_SURF, (0, y))])
+        FONT.render_to(
+            NATIVE_SURF, (x, FONT_H), f"{
+                CAM_RECT.x // NATIVE_W + 1}", "grey100"
+        )
+        FONT.render_to(
+            NATIVE_SURF, (FONT_W, y), f"{
+                CAM_RECT.y // NATIVE_H + 1}", "grey100"
+        )
+        NATIVE_SURF.blit(
+            ORIGIN_SURF, (-CAM_RECT.x, -CAM_RECT.y)
         )
 
-        # Draw background
-        sky.draw()
-        cloud.draw()
-        trees.draw()
-        glow.draw()
-        draw_grid()
-
-        # Draw sprites
-        for room in ROOMS_LIST:
-            for cell in room:
-                if cell == 0:
-                    continue
-
-                cell.draw(dt)
-
-        # Render selected sprite preview
+        # Draw cursor
         pos = pg.mouse.get_pos()
-        pos = (
-            pos[0] // RESOLUTION_SCALE,
-            pos[1] // RESOLUTION_SCALE
-        )
-        render_pos_snapped_tile_unit = (
-            int((pos[0] + CAM_FRECT.x) // TILE_SIZE),
-            int((pos[1] + CAM_FRECT.y) // TILE_SIZE)
-        )
-        render_pos_snapped = (
-            (render_pos_snapped_tile_unit[0] * TILE_SIZE),
-            (render_pos_snapped_tile_unit[1] * TILE_SIZE)
-        )
-        x = render_pos_snapped[0] - CAM_FRECT.x
-        y = render_pos_snapped[1] - CAM_FRECT.y
-        if selected_sprite == "floor":
-            floor.draw_preview(dt, (x, y))
-        elif selected_sprite == "stone":
-            stone.draw_preview(dt, (x, y))
-        elif selected_sprite == "scone":
-            scone.draw_preview(dt, (x, y))
+        pos_x = pos[0] // RESOLUTION
+        pos_y = pos[1] // RESOLUTION
+        draw_pos_tile_x = (pos_x + int(CAM_RECT.x)) // TILE_S
+        draw_pos_tile_y = (pos_y + int(CAM_RECT.y)) // TILE_S
+        draw_pos_x = draw_pos_tile_x * TILE_S
+        draw_pos_y = draw_pos_tile_y * TILE_S
+        x = draw_pos_tile_x - ROOM_X_TILE_UNIT
+        y = draw_pos_tile_y - ROOM_Y_TILE_UNIT
+        if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
+            cursor_draw_pos_x = draw_pos_x - CAM_RECT.x
+            cursor_draw_pos_y = draw_pos_y - CAM_RECT.y
+            NATIVE_SURF.blit(CURSOR_SPRITE_SHEET_SURF,
+                             (cursor_draw_pos_x, cursor_draw_pos_y), selected_region)
+
+        # Draw sprite
+        for room in ROOMS_LIST:
+            for item in room:
+                if item != 0:
+                    pos = item["pos"]
+                    tile_draw_pos_x = pos[0] - CAM_RECT.x
+                    tile_draw_pos_y = pos[1] - CAM_RECT.y
+                    NATIVE_SURF.blit(SPRITE_SHEET_SURF,
+                                     (tile_draw_pos_x, tile_draw_pos_y), item["region"])
+        # Move camera
+        cam_dir.x = is_d_pressed - is_a_pressed
+        cam_dir.y = is_s_pressed - is_w_pressed
+        if cam_dir.x != 0 or cam_dir.y != 0:
+            cam_dir.normalize_ip()
+        cam_vel = cam_vel.lerp(cam_dir * CAM_SPD, CAM_LERP_FACTOR)
+        if abs(cam_vel.x) < 0.001:
+            cam_vel.x = 0
+        if abs(cam_vel.y) < 0.001:
+            cam_vel.y = 0
+        CAM_RECT.x += cam_vel.x * dt
+        CAM_RECT.y += cam_vel.y * dt
 
         # Lmb pressed
         if is_lmb_pressed:
-            pos = pg.mouse.get_pos()
-            pos = (
-                pos[0] // RESOLUTION_SCALE,
-                pos[1] // RESOLUTION_SCALE
-            )
-            render_pos_snapped_tile_unit = (
-                int((pos[0] + CAM_FRECT.x) // TILE_SIZE),
-                int((pos[1] + CAM_FRECT.y) // TILE_SIZE)
-            )
-            render_pos_snapped = (
-                (render_pos_snapped_tile_unit[0] * TILE_SIZE),
-                (render_pos_snapped_tile_unit[1] * TILE_SIZE)
-            )
-            x = render_pos_snapped_tile_unit[0] - ROOM_TL_TILE_UNIT[0]
-            y = render_pos_snapped_tile_unit[1] - ROOM_TL_TILE_UNIT[1]
             if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
-                if selected_sprite == "floor":
-                    cell = ROOMS_LIST[10][
-                        y * ROOM_W_TILE_UNIT + x]
-                    if cell == 0:
-                        sprite = Floor(
-                            (
-                                render_pos_snapped[0],
-                                render_pos_snapped[1]
-                            )
-                        )
-                        ROOMS_LIST[10][
-                            y * ROOM_W_TILE_UNIT + x
-                        ] = sprite
-                        update_bitmasks(sprite, (x, y))
+                item = selected_room[y * NATIVE_W_TILE_UNIT + x]
+                if item == 0:
+                    selected_room[y * NATIVE_W_TILE_UNIT + x] = {"pos": (
+                        draw_pos_x, draw_pos_y), "region": selected_region, "name": selected_name}
+                    if selected_name in ["floor", "rock", "bg_rock"]:
+                        update_bitmasks((x, y), (draw_pos_x, draw_pos_y))
 
-                elif selected_sprite == "stone":
-                    cell = ROOMS_LIST[10][
-                        y * ROOM_W_TILE_UNIT + x]
-                    if cell == 0:
-                        sprite = Stone(
-                            (
-                                render_pos_snapped[0],
-                                render_pos_snapped[1]
-                            )
-                        )
-                        ROOMS_LIST[10][
-                            y * ROOM_W_TILE_UNIT + x
-                        ] = sprite
-                        update_bitmasks(sprite, (x, y))
+        # Rmb pressed
+        if is_rmb_pressed:
+            if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
+                item = selected_room[y * NATIVE_W_TILE_UNIT + x]
+                if item != 0:
+                    selected_room[y * NATIVE_W_TILE_UNIT + x] = 0
+                    if selected_name in ["floor", "rock", "bg_rock"]:
+                        update_bitmasks((x, y), (draw_pos_x, draw_pos_y))
 
-                elif selected_sprite == "scone":
-                    cell = ROOMS_LIST[8][
-                        y * ROOM_W_TILE_UNIT + x]
-                    if cell == 0:
-                        sprite = Scone(
-                            (
-                                render_pos_snapped[0],
-                                render_pos_snapped[1]
-                            )
-                        )
-                        ROOMS_LIST[8][
-                            y * ROOM_W_TILE_UNIT + x
-                        ] = sprite
-
-    # Scale native to window
-    pg.transform.scale(
-        NATIVE_SURFACE,
-        (DISPLAY_RECT.width, DISPLAY_RECT.height),
-        DISPLAY_SURFACE
+    # Draw fps
+    FONT.render_to(
+        NATIVE_SURF, (FONT_W, FONT_H), f"FPS: {CLOCK.get_fps()}", "grey100"
     )
+
+    # Native to window
+    pg.transform.scale(NATIVE_SURF, (WINDOW_W, WINDOW_H), WINDOW_SURF)
 
     # Update window
     pg.display.update()
