@@ -34,8 +34,9 @@ S_H_SURF.fill("grey16")
 CAM_RECT = pg.FRect(0, 0, NATIVE_W, NATIVE_H)
 CAM_SPD = 0.09
 CAM_LERP_FACTOR = 0.2
-BITMASK_BLINK_SURFACE = pg.Surface((TILE_S, TILE_S))
-BITMASK_BLINK_SURFACE.fill("grey100")
+HIGHLIGHT_TILE_SURFACE = pg.Surface((TILE_S, TILE_S))
+HIGHLIGHT_TILE_SURFACE.fill("grey100")
+HIGHLIGHT_TILE_SURFACE.set_alpha(122)
 CURSOR_RECT = pg.FRect(0, 0, TILE_S, TILE_S)
 
 # Bitmasks
@@ -300,7 +301,7 @@ cam_vel = pg.math.Vector2(0, 0)
 
 def update_bitmasks(position_tile_unit, draw_position, last=False):
     # Create a blink effect on tile that mask about to change
-    NATIVE_SURF.blit(BITMASK_BLINK_SURFACE,
+    NATIVE_SURF.blit(HIGHLIGHT_TILE_SURFACE,
                      (draw_position[0] - CAM_RECT.x, draw_position[1] - CAM_RECT.y))
 
     # Raw bits
@@ -468,6 +469,20 @@ while 1:
 
         # Draw selected page
         NATIVE_SURF.blit(selected_page_surface, (0, 0))
+
+        # Draw hover cursor
+        pos = pg.mouse.get_pos()
+        pos_x = pos[0] // RESOLUTION
+        pos_y = pos[1] // RESOLUTION
+        pos_tile_x = pos_x // TILE_S
+        pos_tile_y = pos_y // TILE_S
+        pos_tile_snap_x = pos_tile_x * TILE_S
+        pos_tile_snap_y = pos_tile_y * TILE_S
+        item = selected_page_collision[pos_tile_y *
+                                       NATIVE_W_TILE_UNIT + pos_tile_x]
+        if item != 0:
+            NATIVE_SURF.blit(HIGHLIGHT_TILE_SURFACE,
+                             (pos_tile_snap_x, pos_tile_snap_y))
 
     # Normal state
     else:
