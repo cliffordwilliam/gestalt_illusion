@@ -208,25 +208,32 @@ SPRITE_SHEET_SURF = pg.image.load(SPRITE_SHEET_PNG_NAME).convert_alpha()
 CURSOR_SPRITE_SHEET_SURF = pg.image.load(SPRITE_SHEET_PNG_NAME).convert_alpha()
 CURSOR_SPRITE_SHEET_SURF.set_alpha(122)
 collision = [0 for _ in range(NATIVE_W_TILE_UNIT * NATIVE_H_TILE_UNIT)]
-PAGE_1_COLLISION = collision.copy()
+
+# Page 1
 PAGE_1_SURF = pg.Surface((NATIVE_W, NATIVE_H))
 PAGE_1_SURF.blits([
     (SPRITE_SHEET_SURF, (TILE_S, TILE_S), (368, 48, TILE_S, TILE_S)),
-    (SPRITE_SHEET_SURF, (3*TILE_S, TILE_S), (368, 128, TILE_S, TILE_S)),
+    (SPRITE_SHEET_SURF, (2 * TILE_S, TILE_S), (368, 128, TILE_S, TILE_S)),
 ])
 PAGE_1_COLLISION = collision.copy()
 PAGE_1_COLLISION[1 * NATIVE_W_TILE_UNIT +
                  1] = {"name": "floor", "region": (368, 48, TILE_S, TILE_S), "room": 11}
 PAGE_1_COLLISION[1 * NATIVE_W_TILE_UNIT +
-                 3] = {"name": "rock", "region": (368, 128, TILE_S, TILE_S), "room": 11}
+                 2] = {"name": "rock", "region": (368, 128, TILE_S, TILE_S), "room": 11}
 
+# Page 2
 PAGE_2_SURF = pg.Surface((NATIVE_W, NATIVE_H))
 PAGE_2_SURF.blits([
     (SPRITE_SHEET_SURF, (TILE_S, TILE_S), (368, 208, TILE_S, TILE_S)),
+    (SPRITE_SHEET_SURF, (2 * TILE_S, TILE_S), (320, 240, TILE_S, TILE_S)),
 ])
 PAGE_2_COLLISION = collision.copy()
 PAGE_2_COLLISION[1 * NATIVE_W_TILE_UNIT +
                  1] = {"name": "bg_rock", "region": (368, 208, TILE_S, TILE_S), "room": 0}
+PAGE_2_COLLISION[1 * NATIVE_W_TILE_UNIT +
+                 2] = {"name": "tall_bush", "region": (320, 240, 11 * TILE_S, 2 * TILE_S), "room": 1}
+
+# Pages
 PAGE_SURFS = [
     PAGE_1_SURF,
     PAGE_2_SURF
@@ -293,10 +300,48 @@ is_s_pressed = 0
 is_d_pressed = 0
 is_lmb_pressed = False
 is_rmb_pressed = False
+is_mmb_pressed = False
 
 # Cam
 cam_dir = pg.math.Vector2(0, 0)
 cam_vel = pg.math.Vector2(0, 0)
+
+
+def fill(position_tile_unit, draw_position):
+    # Create a blink effect on tile that mask about to change
+    NATIVE_SURF.blit(HIGHLIGHT_TILE_SURFACE,
+                     (draw_position[0] - CAM_RECT.x, draw_position[1] - CAM_RECT.y))
+
+    x = position_tile_unit[0]
+    y = position_tile_unit[1]
+    neighbour_pos_tile_units = [
+        (x - 0, y - 1),
+        (x - 1, y - 0),                 (x + 1, y - 0), (x - 0, y + 1)
+    ]
+    for pos in neighbour_pos_tile_units:
+        # Get tile from map
+        neighbour_pos_tile_unit_x = pos[0]
+        neighbour_pos_tile_unit_y = pos[1]
+        if (0 <= neighbour_pos_tile_unit_x < ROOM_W_TILE_UNIT) and (0 <= neighbour_pos_tile_unit_y < ROOM_H_TILE_UNIT):
+            neighbour = selected_room[
+                neighbour_pos_tile_unit_y * ROOM_W_TILE_UNIT + neighbour_pos_tile_unit_x]
+
+            # Air?
+            if neighbour == 0:
+                # Fill
+                neighbour_draw_pos_x = (
+                    neighbour_pos_tile_unit_x + ROOM_X_TILE_UNIT) * TILE_S
+                neighbour_draw_pos_y = (
+                    neighbour_pos_tile_unit_y + ROOM_Y_TILE_UNIT) * TILE_S
+                selected_room[neighbour_pos_tile_unit_y * NATIVE_W_TILE_UNIT + neighbour_pos_tile_unit_x] = {"pos": (
+                    neighbour_draw_pos_x, neighbour_draw_pos_y), "region": selected_region, "name": selected_name}
+                fill(
+                    (neighbour_pos_tile_unit_x, neighbour_pos_tile_unit_y),
+                    (neighbour_draw_pos_x, neighbour_draw_pos_y),
+                )
+                if selected_name in ["floor", "rock", "bg_rock"]:
+                    update_bitmasks(
+                        (neighbour_pos_tile_unit_x, neighbour_pos_tile_unit_y), (neighbour_draw_pos_x, neighbour_draw_pos_y))
 
 
 def update_bitmasks(position_tile_unit, draw_position, last=False):
@@ -429,6 +474,8 @@ while 1:
             if not is_menu:
                 if event.button == 1:
                     is_lmb_pressed = True
+                if event.button == 2:
+                    is_mmb_pressed = True
                 if event.button == 3:
                     is_rmb_pressed = True
 
@@ -442,6 +489,8 @@ while 1:
             if not is_menu:
                 if event.button == 1:
                     is_lmb_pressed = False
+                if event.button == 2:
+                    is_mmb_pressed = False
                 if event.button == 3:
                     is_rmb_pressed = False
 
@@ -571,6 +620,15 @@ while 1:
                     selected_room[y * NATIVE_W_TILE_UNIT + x] = 0
                     if selected_name in ["floor", "rock", "bg_rock"]:
                         update_bitmasks((x, y), (draw_pos_x, draw_pos_y))
+
+        # Mmb pressed
+        if is_mmb_pressed:
+            if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
+                item = selected_room[y * NATIVE_W_TILE_UNIT + x]
+                if item == 0:
+                    selected_room[y * NATIVE_W_TILE_UNIT + x] = {"pos": (
+                        draw_pos_x, draw_pos_y), "region": selected_region, "name": selected_name}
+                    fill((x, y), (draw_pos_x, draw_pos_y))
 
     # Draw fps
     FONT.render_to(
