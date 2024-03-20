@@ -292,7 +292,6 @@ selected_page_surface = PAGE_SURFS[page_index]
 selected_page_collision = PAGE_COLLISIONS[page_index]
 selected_bitmask_region = BITMASK_REGION_DICT[selected_name]
 
-
 # Input
 is_w_pressed = 0
 is_a_pressed = 0
@@ -301,13 +300,18 @@ is_d_pressed = 0
 is_lmb_pressed = False
 is_rmb_pressed = False
 is_mmb_pressed = False
+is_shift_pressed = False
+
+# Draw rect
+start_pos = (0, 0)
+end_pos = (0, 0)
 
 # Cam
 cam_dir = pg.math.Vector2(0, 0)
 cam_vel = pg.math.Vector2(0, 0)
 
 
-def fill(position_tile_unit, draw_position):
+def fill(position_tile_unit, draw_position, l=0, t=0, r=ROOM_W_TILE_UNIT, b=ROOM_H_TILE_UNIT):
     # Create a blink effect on tile that mask about to change
     NATIVE_SURF.blit(HIGHLIGHT_TILE_SURFACE,
                      (draw_position[0] - CAM_RECT.x, draw_position[1] - CAM_RECT.y))
@@ -322,7 +326,7 @@ def fill(position_tile_unit, draw_position):
         # Get tile from map
         neighbour_pos_tile_unit_x = pos[0]
         neighbour_pos_tile_unit_y = pos[1]
-        if (0 <= neighbour_pos_tile_unit_x < ROOM_W_TILE_UNIT) and (0 <= neighbour_pos_tile_unit_y < ROOM_H_TILE_UNIT):
+        if (l <= neighbour_pos_tile_unit_x < r) and (t <= neighbour_pos_tile_unit_y < b):
             neighbour = selected_room[
                 neighbour_pos_tile_unit_y * ROOM_W_TILE_UNIT + neighbour_pos_tile_unit_x]
 
@@ -337,7 +341,7 @@ def fill(position_tile_unit, draw_position):
                     neighbour_draw_pos_x, neighbour_draw_pos_y), "region": selected_region, "name": selected_name}
                 fill(
                     (neighbour_pos_tile_unit_x, neighbour_pos_tile_unit_y),
-                    (neighbour_draw_pos_x, neighbour_draw_pos_y),
+                    (neighbour_draw_pos_x, neighbour_draw_pos_y), l, t, r, b
                 )
                 if selected_name in ["floor", "rock", "bg_rock"]:
                     update_bitmasks(
@@ -425,6 +429,7 @@ while 1:
         if event.type == pg.KEYDOWN:
             # Normal state
             if not is_menu:
+                # For cam movement input
                 if event.key == pg.K_w:
                     is_w_pressed = 1
                 if event.key == pg.K_a:
@@ -433,28 +438,42 @@ while 1:
                     is_s_pressed = 1
                 if event.key == pg.K_d:
                     is_d_pressed = 1
+                # Open menu
                 if event.key == pg.K_SPACE:
                     is_menu = True
+                # Rect draw mode
+                if event.key == pg.K_LSHIFT:
+                    is_shift_pressed = True
+                    pos = pg.mouse.get_pos()
+                    pos_x = pos[0] // RESOLUTION
+                    pos_y = pos[1] // RESOLUTION
+                    draw_pos_tile_x = (pos_x + int(CAM_RECT.x)) // TILE_S
+                    draw_pos_tile_y = (pos_y + int(CAM_RECT.y)) // TILE_S
+                    draw_pos_x = draw_pos_tile_x * TILE_S
+                    draw_pos_y = draw_pos_tile_y * TILE_S
+                    x = draw_pos_tile_x - ROOM_X_TILE_UNIT
+                    y = draw_pos_tile_y - ROOM_Y_TILE_UNIT
+                    # Only render when it is in room
+                    if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
+                        start_pos = (draw_pos_x, draw_pos_y)
 
             # Menu state
             else:
-                if event.key == pg.K_a:
-                    page_index -= 1
-                    page_index = max(page_index, 0)
-                    selected_page_surface = PAGE_SURFS[page_index]
-                    selected_page_collision = PAGE_COLLISIONS[page_index]
-                if event.key == pg.K_d:
-                    page_index += 1
-                    page_index = min(page_index, PAGES_INDEX_LEN)
-                    selected_page_surface = PAGE_SURFS[page_index]
-                    selected_page_collision = PAGE_COLLISIONS[page_index]
+                # Cycle pages
+                direction = int(event.key == pg.K_d) - int(event.key == pg.K_a)
+                page_index += direction
+                page_index = max(0, min(page_index, PAGES_INDEX_LEN))
+                selected_page_surface = PAGE_SURFS[page_index]
+                selected_page_collision = PAGE_COLLISIONS[page_index]
+                # Close menu
                 if event.key == pg.K_SPACE:
                     is_menu = False
 
         # Key up
-        if event.type == pg.KEYUP:
+        elif event.type == pg.KEYUP:
             # Normal state
             if not is_menu:
+                # For cam movement input
                 if event.key == pg.K_w:
                     is_w_pressed = 0
                 if event.key == pg.K_a:
@@ -463,15 +482,32 @@ while 1:
                     is_s_pressed = 0
                 if event.key == pg.K_d:
                     is_d_pressed = 0
-
-            # Menu state
-            else:
-                pass
+                # Draw rect
+                if event.key == pg.K_LSHIFT:
+                    is_shift_pressed = False
+                    start_draw_pos_tile_x, start_draw_pos_tile_y = start_pos[
+                        0] // TILE_S, start_pos[1] // TILE_S
+                    end_draw_pos_tile_x, end_draw_pos_tile_y = end_pos[0] // TILE_S, end_pos[1] // TILE_S
+                    x, y = start_draw_pos_tile_x - \
+                        ROOM_X_TILE_UNIT, start_draw_pos_tile_y - ROOM_Y_TILE_UNIT
+                    x2, y2 = end_draw_pos_tile_x - \
+                        ROOM_X_TILE_UNIT, end_draw_pos_tile_y - ROOM_Y_TILE_UNIT
+                    l, t = min(x, x2), min(y, y2)
+                    r, b = max(x, x2), max(y, y2)
+                    selected_room[y * NATIVE_W_TILE_UNIT + x] = {
+                        "pos": (start_draw_pos_tile_x * TILE_S, start_draw_pos_tile_y * TILE_S),
+                        "region": selected_region,
+                        "name": selected_name
+                    }
+                    fill((start_draw_pos_tile_x, start_draw_pos_tile_y),
+                         (start_pos[0], start_pos[1]), l, t, r + 1, b + 1)
+                    start_pos = end_pos = (0, 0)
 
         # Mouse down
         if event.type == pg.MOUSEBUTTONDOWN:
             # Normal state
             if not is_menu:
+                # For drawing
                 if event.button == 1:
                     is_lmb_pressed = True
                 if event.button == 2:
@@ -479,14 +515,11 @@ while 1:
                 if event.button == 3:
                     is_rmb_pressed = True
 
-            # Menu state
-            else:
-                pass
-
         # Mouse up
-        if event.type == pg.MOUSEBUTTONUP:
+        elif event.type == pg.MOUSEBUTTONUP:
             # Normal state
             if not is_menu:
+                # For drawing
                 if event.button == 1:
                     is_lmb_pressed = False
                 if event.button == 2:
@@ -496,6 +529,7 @@ while 1:
 
             # Menu state
             else:
+                # Select menu item
                 pos = pg.mouse.get_pos()
                 pos_x = pos[0] // RESOLUTION
                 pos_y = pos[1] // RESOLUTION
@@ -564,71 +598,113 @@ while 1:
             ORIGIN_SURF, (-CAM_RECT.x, -CAM_RECT.y)
         )
 
-        # Draw cursor
-        pos = pg.mouse.get_pos()
-        pos_x = pos[0] // RESOLUTION
-        pos_y = pos[1] // RESOLUTION
-        draw_pos_tile_x = (pos_x + int(CAM_RECT.x)) // TILE_S
-        draw_pos_tile_y = (pos_y + int(CAM_RECT.y)) // TILE_S
-        draw_pos_x = draw_pos_tile_x * TILE_S
-        draw_pos_y = draw_pos_tile_y * TILE_S
-        x = draw_pos_tile_x - ROOM_X_TILE_UNIT
-        y = draw_pos_tile_y - ROOM_Y_TILE_UNIT
-        if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
-            cursor_draw_pos_x = draw_pos_x - CAM_RECT.x
-            cursor_draw_pos_y = draw_pos_y - CAM_RECT.y
-            NATIVE_SURF.blit(CURSOR_SPRITE_SHEET_SURF,
-                             (cursor_draw_pos_x, cursor_draw_pos_y), selected_region)
-
         # Draw sprite
         for room in ROOMS_LIST:
             for item in room:
                 if item != 0:
                     pos = item["pos"]
-                    tile_draw_pos_x = pos[0] - CAM_RECT.x
-                    tile_draw_pos_y = pos[1] - CAM_RECT.y
-                    NATIVE_SURF.blit(SPRITE_SHEET_SURF,
-                                     (tile_draw_pos_x, tile_draw_pos_y), item["region"])
+                    region = item["region"]
+                    w, h = region[2], region[3]
+                    x, y = pos
+                    # Only render when it is in camera
+                    if (CAM_RECT.x - w <= x < CAM_RECT.right) and (CAM_RECT.y - h <= y < CAM_RECT.bottom):
+                        tile_draw_pos_x = x - CAM_RECT.x
+                        tile_draw_pos_y = y - CAM_RECT.y
+                        NATIVE_SURF.blit(
+                            SPRITE_SHEET_SURF, (tile_draw_pos_x, tile_draw_pos_y), region)
+
+        # Rect draw mode
+        if is_shift_pressed:
+            pos = pg.mouse.get_pos()
+            pos_x = pos[0] // RESOLUTION
+            pos_y = pos[1] // RESOLUTION
+            draw_pos_tile_x = (pos_x + int(CAM_RECT.x)) // TILE_S
+            draw_pos_tile_y = (pos_y + int(CAM_RECT.y)) // TILE_S
+            draw_pos_x = draw_pos_tile_x * TILE_S
+            draw_pos_y = draw_pos_tile_y * TILE_S
+            x = draw_pos_tile_x - ROOM_X_TILE_UNIT
+            y = draw_pos_tile_y - ROOM_Y_TILE_UNIT
+            # Only render when it is in room
+            if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
+                start_draw_pos_x = start_pos[0] - CAM_RECT.x
+                start_draw_pos_y = start_pos[1] - CAM_RECT.y
+                end_pos = (draw_pos_x, draw_pos_y)
+                end_draw_pos_x = draw_pos_x - CAM_RECT.x
+                end_draw_pos_y = draw_pos_y - CAM_RECT.y
+                if start_draw_pos_x < end_draw_pos_x:
+                    end_draw_pos_x += TILE_S
+                else:
+                    start_draw_pos_x += TILE_S
+                if start_draw_pos_y < end_draw_pos_y:
+                    end_draw_pos_y += TILE_S
+                else:
+                    start_draw_pos_y += TILE_S
+                pg.draw.line(NATIVE_SURF, "red", (start_draw_pos_x,
+                             start_draw_pos_y), (end_draw_pos_x, start_draw_pos_y))
+                pg.draw.line(NATIVE_SURF, "red", (start_draw_pos_x,
+                             start_draw_pos_y), (start_draw_pos_x, end_draw_pos_y))
+                pg.draw.line(NATIVE_SURF, "red", (end_draw_pos_x,
+                             end_draw_pos_y), (start_draw_pos_x, end_draw_pos_y))
+                pg.draw.line(NATIVE_SURF, "red", (end_draw_pos_x,
+                             end_draw_pos_y), (end_draw_pos_x, start_draw_pos_y))
+
+        # Normal draw mode
+        else:
+            # Draw cursor
+            pos = pg.mouse.get_pos()
+            pos_x = pos[0] // RESOLUTION
+            pos_y = pos[1] // RESOLUTION
+            draw_pos_tile_x = (pos_x + int(CAM_RECT.x)) // TILE_S
+            draw_pos_tile_y = (pos_y + int(CAM_RECT.y)) // TILE_S
+            draw_pos_x = draw_pos_tile_x * TILE_S
+            draw_pos_y = draw_pos_tile_y * TILE_S
+            x = draw_pos_tile_x - ROOM_X_TILE_UNIT
+            y = draw_pos_tile_y - ROOM_Y_TILE_UNIT
+            # Only render when it is in room
+            if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
+                cursor_draw_pos_x = draw_pos_x - CAM_RECT.x
+                cursor_draw_pos_y = draw_pos_y - CAM_RECT.y
+                NATIVE_SURF.blit(CURSOR_SPRITE_SHEET_SURF,
+                                 (cursor_draw_pos_x, cursor_draw_pos_y), selected_region)
+
+            # Draw
+            if is_lmb_pressed:
+                if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
+                    item = selected_room[y * NATIVE_W_TILE_UNIT + x]
+                    if item == 0:
+                        selected_room[y * NATIVE_W_TILE_UNIT + x] = {"pos": (
+                            draw_pos_x, draw_pos_y), "region": selected_region, "name": selected_name}
+                        if selected_name in ["floor", "rock", "bg_rock"]:
+                            update_bitmasks((x, y), (draw_pos_x, draw_pos_y))
+
+            # Erase
+            elif is_rmb_pressed:
+                if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
+                    item = selected_room[y * NATIVE_W_TILE_UNIT + x]
+                    if item != 0:
+                        selected_room[y * NATIVE_W_TILE_UNIT + x] = 0
+                        if selected_name in ["floor", "rock", "bg_rock"]:
+                            update_bitmasks((x, y), (draw_pos_x, draw_pos_y))
+
+            # Fill
+            elif is_mmb_pressed:
+                if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
+                    item = selected_room[y * NATIVE_W_TILE_UNIT + x]
+                    if item == 0:
+                        selected_room[y * NATIVE_W_TILE_UNIT + x] = {"pos": (
+                            draw_pos_x, draw_pos_y), "region": selected_region, "name": selected_name}
+                        fill((x, y), (draw_pos_x, draw_pos_y))
+
         # Move camera
         cam_dir.x = is_d_pressed - is_a_pressed
         cam_dir.y = is_s_pressed - is_w_pressed
-        if cam_dir.x != 0 or cam_dir.y != 0:
+        if cam_dir.length_squared() > 0:
             cam_dir.normalize_ip()
         cam_vel = cam_vel.lerp(cam_dir * CAM_SPD, CAM_LERP_FACTOR)
-        if abs(cam_vel.x) < 0.001:
-            cam_vel.x = 0
-        if abs(cam_vel.y) < 0.001:
-            cam_vel.y = 0
+        cam_vel.x = 0 if abs(cam_vel.x) < 0.001 else cam_vel.x
+        cam_vel.y = 0 if abs(cam_vel.y) < 0.001 else cam_vel.y
         CAM_RECT.x += cam_vel.x * dt
         CAM_RECT.y += cam_vel.y * dt
-
-        # Lmb pressed
-        if is_lmb_pressed:
-            if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
-                item = selected_room[y * NATIVE_W_TILE_UNIT + x]
-                if item == 0:
-                    selected_room[y * NATIVE_W_TILE_UNIT + x] = {"pos": (
-                        draw_pos_x, draw_pos_y), "region": selected_region, "name": selected_name}
-                    if selected_name in ["floor", "rock", "bg_rock"]:
-                        update_bitmasks((x, y), (draw_pos_x, draw_pos_y))
-
-        # Rmb pressed
-        if is_rmb_pressed:
-            if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
-                item = selected_room[y * NATIVE_W_TILE_UNIT + x]
-                if item != 0:
-                    selected_room[y * NATIVE_W_TILE_UNIT + x] = 0
-                    if selected_name in ["floor", "rock", "bg_rock"]:
-                        update_bitmasks((x, y), (draw_pos_x, draw_pos_y))
-
-        # Mmb pressed
-        if is_mmb_pressed:
-            if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
-                item = selected_room[y * NATIVE_W_TILE_UNIT + x]
-                if item == 0:
-                    selected_room[y * NATIVE_W_TILE_UNIT + x] = {"pos": (
-                        draw_pos_x, draw_pos_y), "region": selected_region, "name": selected_name}
-                    fill((x, y), (draw_pos_x, draw_pos_y))
 
     # Draw fps
     FONT.render_to(
