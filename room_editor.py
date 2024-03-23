@@ -1511,7 +1511,7 @@ def update_bitmasks(x_tu, y_tu, xds, yds, last=False):
                 continue
 
             # Windows do not mix
-            if selected_sprite.name in ["BigWindow", "WallWindow"]:
+            if not selected_sprite.name in ["Floor", "Rock", "BgRock"]:
                 if selected_sprite.name != neighbour.name:
                     continue
 
@@ -1701,9 +1701,13 @@ while 1:
         ys = yds - CAM_RECT.y
         r = xs + selected_sprite.region[2]
         b = ys + selected_sprite.region[3]
-        if not is_shift_pressed:
-            pg.draw.lines(NATIVE_SURF, "white", True, [
-                (xs, ys), (r, ys), (r, ys), (r, b), (r, b), (xs, b)], 1)
+        if not (is_shift_pressed and is_lmb_pressed) and not (is_shift_pressed and is_rmb_pressed):
+            if is_rmb_pressed:
+                pg.draw.lines(NATIVE_SURF, "red", True, [
+                    (xs, ys), (r, ys), (r, ys), (r, b), (r, b), (xs, b)], 1)
+            else:
+                pg.draw.lines(NATIVE_SURF, "white", True, [
+                    (xs, ys), (r, ys), (r, ys), (r, b), (r, b), (xs, b)], 1)
         # endregion
 
         # Rect draw mode
@@ -1803,6 +1807,10 @@ while 1:
             # region Rect draw input flag
             if event.key == pg.K_LSHIFT:
                 is_shift_pressed = True
+                # region Rect draw start pos
+                start_xs = xs
+                start_ys = ys
+                # endregion
             # endregion
 
         # Key up
@@ -1858,18 +1866,22 @@ while 1:
             # region Drawing input flag
             if event.button == 1:
                 is_lmb_pressed = True
+                # region Rect draw start pos
+                if is_shift_pressed:
+                    start_xs = xs
+                    start_ys = ys
+                # endregion
             if event.button == 2:
                 is_mmb_pressed = True
             if event.button == 3:
                 is_rmb_pressed = True
                 if not is_menu:
                     pg.mouse.set_cursor(DEL_CURSOR)
-            # endregion
-
-            # region Rect draw start pos
-            if is_shift_pressed:
-                start_xs = xs
-                start_ys = ys
+                # region Rect draw start pos
+                if is_shift_pressed:
+                    start_xs = xs
+                    start_ys = ys
+                # endregion
             # endregion
 
         # Mouse up
@@ -2126,11 +2138,11 @@ while 1:
                     NATIVE_SURF.blit(LIGHT_SURF, (0, 0))
             # endregion
 
-    # # region Debug draw
-    # FONT.render_to(NATIVE_SURF, (FONT_W, 3 * FONT_H),
-    #                f"fps: {CLOCK.get_fps()}", "grey100")
-    # FONT.render_to(NATIVE_SURF, (FONT_W, 5 * FONT_H),
-    #                f"sprite: {selected_sprite}", "grey100")
+    # region Debug draw
+    FONT.render_to(NATIVE_SURF, (FONT_W, 32 * FONT_H),
+                   f"fps: {int(CLOCK.get_fps())}", "grey100", "black")
+    FONT.render_to(NATIVE_SURF, (FONT_W, 34 * FONT_H),
+                   f"sprite: {selected_sprite.name}", "grey100", "black")
     # endregion
 
     # region Native to window and update window
