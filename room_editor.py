@@ -4,295 +4,1461 @@ from sys import exit
 
 pg.init()
 
-# Constants
+# region Room editor settings
+# TODO: come up with a way to select different sprite sheets, like a drop down options or something
+SPRITE_SHEET_PNG_NAME = "stage_1_sprite_sheet.png"
+ROOM_X_RU = int(input("Enter ROOM_X_RU: "))
+ROOM_Y_RU = int(input("Enter ROOM_Y_RU: "))
+ROOM_SCALE_X = int(input("Enter ROOM_SCALE_X: "))
+ROOM_SCALE_Y = int(input("Enter ROOM_SCALE_Y: "))
+# TODO: with selected sprite sheet, also set the total layers here, so bind the 2 data
+TOTAL_LAYERS = 15
+# These always stay the same for my game but in case other people wants to edit I leave it here
 TILE_S = 16
+RESOLUTION = 3
+# TODO: Also bind this with selected sprite sheet
+BITMASK_TYPE_SPRITE_NAMES = [
+    "Floor", "Rock", "BgRock", "Pillar", "Balcony", "Rail", "BalconySupport", "WallFence", "BigWindow", "WallWindow"
+]
+# endregion
+
+# region Sprites settings
+SPRITES = []
+
+
+class Floor:
+    def __init__(self):
+        self.name = "Floor"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 13
+        self.regions = {
+            208: (320, 0, 16, 16),
+            248: (336, 0, 16, 16),
+            104: (352, 0, 16, 16),
+            64: (368, 0, 16, 16),
+            80: (384, 0, 16, 16),
+            120: (400, 0, 16, 16),
+            216: (416, 0, 16, 16),
+            72: (432, 0, 16, 16),
+            88: (448, 0, 16, 16),
+            219: (464, 0, 16, 16),
+
+            214: (320, 16, 16, 16),
+            255: (336, 16, 16, 16),
+            107: (352, 16, 16, 16),
+            66: (368, 16, 16, 16),
+            86: (384, 16, 16, 16),
+            127: (400, 16, 16, 16),
+            223: (416, 16, 16, 16),
+            75: (432, 16, 16, 16),
+            95: (448, 16, 16, 16),
+            126: (464, 16, 16, 16),
+
+            22: (320, 32, 16, 16),
+            31: (336, 32, 16, 16),
+            11: (352, 32, 16, 16),
+            2: (368, 32, 16, 16),
+            210: (384, 32, 16, 16),
+            251: (400, 32, 16, 16),
+            254: (416, 32, 16, 16),
+            106: (432, 32, 16, 16),
+            250: (448, 32, 16, 16),
+            218: (464, 32, 16, 16),
+            122: (480, 32, 16, 16),
+
+            16: (320, 48, 16, 16),
+            24: (336, 48, 16, 16),
+            8: (352, 48, 16, 16),
+            0: (368, 48, 16, 16),
+            18: (384, 48, 16, 16),
+            27: (400, 48, 16, 16),
+            30: (416, 48, 16, 16),
+            10: (432, 48, 16, 16),
+            26: (448, 48, 16, 16),
+            94: (464, 48, 16, 16),
+            91: (480, 48, 16, 16),
+
+            82: (384, 64, 16, 16),
+            123: (400, 64, 16, 16),
+            222: (416, 64, 16, 16),
+            74: (432, 64, 16, 16),
+            90: (448, 64, 16, 16),
+        }
+        self.region = self.regions[0]
+        self.icon_region = (368, 48, 16, 16)
+
+    def duplicate(self):
+        return Floor()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(Floor())
+
+
+class Rock:
+    def __init__(self):
+        self.name = "Rock"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 13
+        self.regions = {
+            208: (320, 80, 16, 16),
+            248: (336, 80, 16, 16),
+            104: (352, 80, 16, 16),
+            64: (368, 80, 16, 16),
+            80: (384, 80, 16, 16),
+            120: (400, 80, 16, 16),
+            216: (416, 80, 16, 16),
+            72: (432, 80, 16, 16),
+            88: (448, 80, 16, 16),
+            219: (464, 80, 16, 16),
+
+            214: (320, 96, 16, 16),
+            255: (336, 96, 16, 16),
+            107: (352, 96, 16, 16),
+            66: (368, 96, 16, 16),
+            86: (384, 96, 16, 16),
+            127: (400, 96, 16, 16),
+            223: (416, 96, 16, 16),
+            75: (432, 96, 16, 16),
+            95: (448, 96, 16, 16),
+            126: (464, 96, 16, 16),
+
+            22: (320, 112, 16, 16),
+            31: (336, 112, 16, 16),
+            11: (352, 112, 16, 16),
+            2: (368, 112, 16, 16),
+            210: (384, 112, 16, 16),
+            251: (400, 112, 16, 16),
+            254: (416, 112, 16, 16),
+            106: (432, 112, 16, 16),
+            250: (448, 112, 16, 16),
+            218: (464, 112, 16, 16),
+            122: (480, 112, 16, 16),
+
+            16: (320, 128, 16, 16),
+            24: (336, 128, 16, 16),
+            8: (352, 128, 16, 16),
+            0: (368, 128, 16, 16),
+            18: (384, 128, 16, 16),
+            27: (400, 128, 16, 16),
+            30: (416, 128, 16, 16),
+            10: (432, 128, 16, 16),
+            26: (448, 128, 16, 16),
+            94: (464, 128, 16, 16),
+            91: (480, 128, 16, 16),
+
+            82: (384, 144, 16, 16),
+            123: (400, 144, 16, 16),
+            222: (416, 144, 16, 16),
+            74: (432, 144, 16, 16),
+            90: (448, 144, 16, 16),
+        }
+        self.region = self.regions[0]
+        self.icon_region = (368, 128, 16, 16)
+
+    def duplicate(self):
+        return Rock()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(Rock())
+
+
+class BgRock:
+    def __init__(self):
+        self.name = "BgRock"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 0
+        self.regions = {
+            208: (320, 160, 16, 16),
+            248: (336, 160, 16, 16),
+            104: (352, 160, 16, 16),
+            64: (368, 160, 16, 16),
+            80: (384, 160, 16, 16),
+            120: (400, 160, 16, 16),
+            216: (416, 160, 16, 16),
+            72: (432, 160, 16, 16),
+            88: (448, 160, 16, 16),
+            219: (464, 160, 16, 16),
+
+            214: (320, 176, 16, 16),
+            255: (336, 176, 16, 16),
+            107: (352, 176, 16, 16),
+            66: (368, 176, 16, 16),
+            86: (384, 176, 16, 16),
+            127: (400, 176, 16, 16),
+            223: (416, 176, 16, 16),
+            75: (432, 176, 16, 16),
+            95: (448, 176, 16, 16),
+            126: (464, 176, 16, 16),
+
+            22: (320, 192, 16, 16),
+            31: (336, 192, 16, 16),
+            11: (352, 192, 16, 16),
+            2: (368, 192, 16, 16),
+            210: (384, 192, 16, 16),
+            251: (400, 192, 16, 16),
+            254: (416, 192, 16, 16),
+            106: (432, 192, 16, 16),
+            250: (448, 192, 16, 16),
+            218: (464, 192, 16, 16),
+            122: (480, 192, 16, 16),
+
+            16: (320, 208, 16, 16),
+            24: (336, 208, 16, 16),
+            8: (352, 208, 16, 16),
+            0: (368, 208, 16, 16),
+            18: (384, 208, 16, 16),
+            27: (400, 208, 16, 16),
+            30: (416, 208, 16, 16),
+            10: (432, 208, 16, 16),
+            26: (448, 208, 16, 16),
+            94: (464, 208, 16, 16),
+            91: (480, 208, 16, 16),
+
+            82: (384, 224, 16, 16),
+            123: (400, 224, 16, 16),
+            222: (416, 224, 16, 16),
+            74: (432, 224, 16, 16),
+            90: (448, 224, 16, 16),
+        }
+        self.region = self.regions[0]
+        self.icon_region = (368, 208, 16, 16)
+
+    def duplicate(self):
+        return BgRock()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(BgRock())
+
+
+class TallBush:
+    def __init__(self):
+        self.name = "TallBush"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 1
+        self.region = (320, 240, 176, 32)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return TallBush()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(TallBush())
+
+
+class ShortBush:
+    def __init__(self):
+        self.name = "ShortBush"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 2
+        self.region = (320, 272, 112, 32)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return ShortBush()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(ShortBush())
+
+
+class Boulder:
+    def __init__(self):
+        self.name = "Boulder"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 3
+        self.region = (432, 272, 48, 32)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return Boulder()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(Boulder())
+
+
+class VPillar:
+    def __init__(self):
+        self.name = "VPillar"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 5
+        self.region = (320, 304, 32, 16)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return VPillar()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(VPillar())
+
+
+class Pillar:
+    def __init__(self):
+        self.name = "Pillar"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 5
+        self.regions = {
+            208: 0,
+            248: 0,
+            104: 0,
+            64: (320, 320, 16, 16),
+            80: 0,
+            120: 0,
+            216: 0,
+            72: 0,
+            88: 0,
+            219: 0,
+
+            214: 0,
+            255: 0,
+            107: 0,
+            66: (320, 336, 16, 16),
+            86: 0,
+            127: 0,
+            223: 0,
+            75: 0,
+            95: 0,
+            126: 0,
+
+            22: 0,
+            31: 0,
+            11: 0,
+            2: (320, 352, 16, 16),
+            210: 0,
+            251: 0,
+            254: 0,
+            106: 0,
+            250: 0,
+            218: 0,
+            122: 0,
+
+            16: 0,
+            24: 0,
+            8: 0,
+            0: 0,
+            18: 0,
+            27: 0,
+            30: 0,
+            10: 0,
+            26: 0,
+            94: 0,
+            91: 0,
+
+            82: 0,
+            123: 0,
+            222: 0,
+            74: 0,
+            90: 0,
+        }
+        self.region = self.regions[64]
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return Pillar()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(Pillar())
+
+
+class BrokenWall:
+    def __init__(self):
+        self.name = "BrokenWall"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 5
+        self.region = (336, 320, 16, 16)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return BrokenWall()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(BrokenWall())
+
+
+class Wall:
+    def __init__(self):
+        self.name = "Wall"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 5
+        self.region = (336, 336, 16, 16)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return Wall()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(Wall())
+
+
+class SmallTree:
+    def __init__(self):
+        self.name = "SmallTree"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 4
+        self.region = (352, 304, 48, 64)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return SmallTree()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(SmallTree())
+
+
+class SmallerTree:
+    def __init__(self):
+        self.name = "SmallerTree"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 4
+        self.region = (400, 320, 32, 48)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return SmallerTree()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(SmallerTree())
+
+
+class BigPillarTop:
+    def __init__(self):
+        self.name = "BigPillarTop"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 6
+        self.region = (432, 304, 32, 32)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return BigPillarTop()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(BigPillarTop())
+
+
+class BigPillarMid:
+    def __init__(self):
+        self.name = "BigPillarMid"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 6
+        self.region = (432, 336, 32, 16)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return BigPillarMid()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(BigPillarMid())
+
+
+class BigPillarBot:
+    def __init__(self):
+        self.name = "BigPillarBot"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 6
+        self.region = (432, 352, 32, 16)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return BigPillarBot()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(BigPillarBot())
+
+
+class ThinTop:
+    def __init__(self):
+        self.name = "ThinTop"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 11
+        self.region = (464, 304, 32, 48)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return ThinTop()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(ThinTop())
+
+
+class ThinMid:
+    def __init__(self):
+        self.name = "ThinMid"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 11
+        self.region = (432, 416, 32, 16)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return ThinMid()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(ThinMid())
+
+
+class ThinBot:
+    def __init__(self):
+        self.name = "ThinBot"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 11
+        self.region = (464, 352, 32, 16)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return ThinBot()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(ThinBot())
+
+
+class Window:
+    def __init__(self):
+        self.name = "Window"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 5
+        self.region = (432, 368, 32, 32)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return Window()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(Window())
+
+
+class Furnace:
+    def __init__(self):
+        self.name = "Furnace"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 8
+        self.region = (464, 368, 32, 32)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return Furnace()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(Furnace())
+
+
+class Scone:
+    def __init__(self):
+        self.name = "Scone"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 10
+        self.region = (400, 368, 16, 32)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return Scone()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(Scone())
+
+
+class ThinScone:
+    def __init__(self):
+        self.name = "ThinScone"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 10
+        self.region = (416, 368, 16, 32)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return ThinScone()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(ThinScone())
+
+
+class Furniture:
+    def __init__(self):
+        self.name = "Furniture"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 9
+        self.region = (400, 432, 64, 32)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return Furniture()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(Furniture())
+
+
+class HPillar:
+    def __init__(self):
+        self.name = "HPillar"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 5
+        self.region = (464, 432, 16, 32)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return HPillar()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(HPillar())
+
+
+class Gate:
+    def __init__(self):
+        self.name = "Gate"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 5
+        self.region = (384, 432, 16, 16)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return Gate()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(Gate())
+
+
+class Balcony:
+    def __init__(self):
+        self.name = "Balcony"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 11
+        self.regions = {
+            208: 0,
+            248: 0,
+            104: 0,
+            64: 0,
+            80: 0,
+            120: 0,
+            216: 0,
+            72: 0,
+            88: 0,
+            219: 0,
+
+            214: 0,
+            255: 0,
+            107: 0,
+            66: 0,
+            86: 0,
+            127: 0,
+            223: 0,
+            75: 0,
+            95: 0,
+            126: 0,
+
+            22: 0,
+            31: 0,
+            11: 0,
+            2: 0,
+            210: 0,
+            251: 0,
+            254: 0,
+            106: 0,
+            250: 0,
+            218: 0,
+            122: 0,
+
+            16: (320, 384, 16, 16),
+            24: (336, 384, 16, 16),
+            8: (352, 384, 16, 16),
+            0: 0,
+            18: 0,
+            27: 0,
+            30: 0,
+            10: 0,
+            26: 0,
+            94: 0,
+            91: 0,
+
+            82: 0,
+            123: 0,
+            222: 0,
+            74: 0,
+            90: 0,
+        }
+        self.region = self.regions[16]
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return Balcony()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(Balcony())
+
+
+class Rail:
+    def __init__(self):
+        self.name = "Rail"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 12
+        self.regions = {
+            208: 0,
+            248: 0,
+            104: 0,
+            64: 0,
+            80: 0,
+            120: 0,
+            216: 0,
+            72: 0,
+            88: 0,
+            219: 0,
+
+            214: 0,
+            255: 0,
+            107: 0,
+            66: 0,
+            86: 0,
+            127: 0,
+            223: 0,
+            75: 0,
+            95: 0,
+            126: 0,
+
+            22: 0,
+            31: 0,
+            11: 0,
+            2: 0,
+            210: 0,
+            251: 0,
+            254: 0,
+            106: 0,
+            250: 0,
+            218: 0,
+            122: 0,
+
+            16: (320, 368, 16, 16),
+            24: (336, 368, 16, 16),
+            8: (352, 368, 16, 16),
+            0: 0,
+            18: 0,
+            27: 0,
+            30: 0,
+            10: 0,
+            26: 0,
+            94: 0,
+            91: 0,
+
+            82: 0,
+            123: 0,
+            222: 0,
+            74: 0,
+            90: 0,
+        }
+        self.region = self.regions[16]
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return Rail()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(Rail())
+
+
+class BalconySupport:
+    def __init__(self):
+        self.name = "BalconySupport"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 11
+
+        self.regions = {
+            208: 0,
+            248: 0,
+            104: 0,
+            64: (320, 400, 16, 16),
+            80: 0,
+            120: 0,
+            216: 0,
+            72: 0,
+            88: 0,
+            219: 0,
+
+            214: 0,
+            255: 0,
+            107: 0,
+            66: (320, 416, 16, 16),
+            86: 0,
+            127: 0,
+            223: 0,
+            75: 0,
+            95: 0,
+            126: 0,
+
+            22: 0,
+            31: 0,
+            11: 0,
+            2: (320, 432, 16, 16),
+            210: 0,
+            251: 0,
+            254: 0,
+            106: 0,
+            250: 0,
+            218: 0,
+            122: 0,
+
+            16: 0,
+            24: 0,
+            8: 0,
+            0: 0,
+            18: 0,
+            27: 0,
+            30: 0,
+            10: 0,
+            26: 0,
+            94: 0,
+            91: 0,
+
+            82: 0,
+            123: 0,
+            222: 0,
+            74: 0,
+            90: 0,
+        }
+        self.region = self.regions[64]
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return BalconySupport()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(BalconySupport())
+
+
+class Grass:
+    def __init__(self):
+        self.name = "Grass"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 14
+        self.region = (368, 368, 32, 32)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return Grass()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(Grass())
+
+
+class WallFence:
+    def __init__(self):
+        self.name = "WallFence"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 5
+        self.regions = {
+            208: 0,
+            248: 0,
+            104: 0,
+            64: 0,
+            80: 0,
+            120: 0,
+            216: 0,
+            72: 0,
+            88: 0,
+            219: 0,
+
+            214: 0,
+            255: 0,
+            107: 0,
+            66: 0,
+            86: 0,
+            127: 0,
+            223: 0,
+            75: 0,
+            95: 0,
+            126: 0,
+
+            22: 0,
+            31: 0,
+            11: 0,
+            2: 0,
+            210: 0,
+            251: 0,
+            254: 0,
+            106: 0,
+            250: 0,
+            218: 0,
+            122: 0,
+
+            16: (336, 432, 16, 16),
+            24: (352, 432, 16, 16),
+            8: (368, 432, 16, 16),
+            0: 0,
+            18: 0,
+            27: 0,
+            30: 0,
+            10: 0,
+            26: 0,
+            94: 0,
+            91: 0,
+
+            82: 0,
+            123: 0,
+            222: 0,
+            74: 0,
+            90: 0,
+        }
+        self.region = self.regions[16]
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return WallFence()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(WallFence())
+
+
+class Fire:
+    def __init__(self):
+        self.name = "Fire"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 10
+        self.regions = [
+            (336, 400, 16, 16),
+            (352, 400, 16, 16),
+            (368, 400, 16, 16),
+            (384, 400, 16, 16),
+            (400, 400, 16, 16),
+            (416, 400, 16, 16),
+            (432, 400, 16, 16),
+            (448, 400, 16, 16),
+            (464, 400, 16, 16),
+            (480, 400, 16, 16),
+            (336, 416, 16, 16),
+            (352, 416, 16, 16),
+            (368, 416, 16, 16),
+            (384, 416, 16, 16),
+            (400, 416, 16, 16),
+            (416, 416, 16, 16),
+        ]
+        self.region = self.regions[0]
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+        self.total_dt = 0
+        self.frame = 0
+        self.regions_len = len(self.regions)
+
+    def duplicate(self):
+        return Fire()
+
+    def update(self, dt):
+        self.total_dt += dt
+        if self.total_dt > 50:
+            self.total_dt = 0
+            self.frame += 1
+            if self.frame == self.regions_len:
+                self.frame = 0
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.regions[self.frame])
+
+
+SPRITES.append(Fire())
+
+
+class BigWindow:
+    def __init__(self):
+        self.name = "BigWindow"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 5
+        self.regions = {
+            208: (400, 464, 16, 16),
+            248: (416, 464, 16, 16),
+            104: (432, 464, 16, 16),
+            64: 0,
+            80: 0,
+            120: 0,
+            216: 0,
+            72: 0,
+            88: 0,
+            219: 0,
+
+            214: (400, 480, 16, 16),
+            255: (416, 496, 16, 16),
+            107: (432, 480, 16, 16),
+            66: 0,
+            86: 0,
+            127: 0,
+            223: 0,
+            75: 0,
+            95: 0,
+            126: 0,
+
+            22: (400, 496, 16, 16),
+            31: (416, 496, 16, 16),
+            11: (432, 496, 16, 16),
+            2: 0,
+            210: 0,
+            251: 0,
+            254: 0,
+            106: 0,
+            250: 0,
+            218: 0,
+            122: 0,
+
+            16: 0,
+            24: 0,
+            8: 0,
+            0: 0,
+            18: 0,
+            27: 0,
+            30: 0,
+            10: 0,
+            26: 0,
+            94: 0,
+            91: 0,
+
+            82: 0,
+            123: 0,
+            222: 0,
+            74: 0,
+            90: 0,
+        }
+        self.region = self.regions[255]
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return BigWindow()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(BigWindow())
+
+
+class BigWindowLamp:
+    def __init__(self):
+        self.name = "BigWindowLamp"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 5
+        self.region = (416, 480, 16, 16)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return BigWindowLamp()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(BigWindowLamp())
+
+# PPPP
+
+
+class WallWindow:
+    def __init__(self):
+        self.name = "WallWindow"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 5
+        self.regions = {
+            208: (448, 464, 16, 16),
+            248: (464, 464, 16, 16),
+            104: (480, 464, 16, 16),
+            64: 0,
+            80: 0,
+            120: 0,
+            216: 0,
+            72: 0,
+            88: 0,
+            219: 0,
+
+            214: (448, 480, 16, 16),
+            255: (464, 496, 16, 16),
+            107: (480, 480, 16, 16),
+            66: 0,
+            86: 0,
+            127: 0,
+            223: 0,
+            75: 0,
+            95: 0,
+            126: 0,
+
+            22: (448, 496, 16, 16),
+            31: (464, 496, 16, 16),
+            11: (480, 496, 16, 16),
+            2: 0,
+            210: 0,
+            251: 0,
+            254: 0,
+            106: 0,
+            250: 0,
+            218: 0,
+            122: 0,
+
+            16: 0,
+            24: 0,
+            8: 0,
+            0: 0,
+            18: 0,
+            27: 0,
+            30: 0,
+            10: 0,
+            26: 0,
+            94: 0,
+            91: 0,
+
+            82: 0,
+            123: 0,
+            222: 0,
+            74: 0,
+            90: 0,
+        }
+        self.region = self.regions[255]
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return WallWindow()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(WallWindow())
+
+
+class WallWindowLamp:
+    def __init__(self):
+        self.name = "WallWindowLamp"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 5
+        self.region = (464, 480, 16, 16)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return WallWindowLamp()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(WallWindowLamp())
+
+
+class Door:
+    def __init__(self):
+        self.name = "Door"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 5
+        self.region = (400, 512, 32, 64)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return Door()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(Door())
+
+
+class CurtainLeft:
+    def __init__(self):
+        self.name = "CurtainLeft"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 7
+        self.region = (432, 512, 32, 80)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return CurtainLeft()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(CurtainLeft())
+
+
+class CurtainRight:
+    def __init__(self):
+        self.name = "CurtainRight"
+        self.xds = 0
+        self.yds = 0
+        self.layer_i = 7
+        self.region = (464, 512, 32, 80)
+        self.icon_region = (self.region[0], self.region[1], 16, 16)
+
+    def duplicate(self):
+        return CurtainRight()
+
+    def update(self, dt):
+        xd = self.xds - CAM_RECT.x
+        yd = self.yds - CAM_RECT.y
+        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+
+
+SPRITES.append(CurtainRight())
+
+SPRITES_LEN = len(SPRITES)
+# endregion
+
+# region Constants
+ADD_CURSOR_PNG_NAME = "add_cursor.png"
+DEL_CURSOR_PNG_NAME = "del_cursor.png"
 FONT_H = 5
 FONT_W = 3
-FONT = font.Font("cg_pixel_3x5_mono.ttf", FONT_H)
-EVENTS = [pg.KEYDOWN, pg.KEYUP, pg.MOUSEBUTTONDOWN, pg.MOUSEBUTTONUP, pg.QUIT]
 FPS = 30
-CLOCK = pg.time.Clock()
-NATIVE_W = 320
-NATIVE_H = 176
-NATIVE_W_TILE_UNIT = NATIVE_W // TILE_S
-NATIVE_H_TILE_UNIT = NATIVE_H // TILE_S
-NATIVE_SURF = pg.Surface((NATIVE_W, NATIVE_H))
-RESOLUTION = 5
+NATIVE_W_TU = 20
+NATIVE_H_TU = 11
+NATIVE_W = TILE_S * NATIVE_W_TU
+NATIVE_H = TILE_S * NATIVE_H_TU
 WINDOW_W = NATIVE_W * RESOLUTION
 WINDOW_H = NATIVE_H * RESOLUTION
+CAM_SPD = 4
 WINDOW_SURF = pg.display.set_mode((WINDOW_W, WINDOW_H))
-ORIGIN_SURF = pg.Surface((1, 1))
-ORIGIN_SURF.fill("red")
-V_SURF = pg.Surface((1, NATIVE_H))
-V_SURF.fill("grey12")
-H_SURF = pg.Surface((NATIVE_W, 1))
-H_SURF.fill("grey12")
-S_V_SURF = pg.Surface((1, NATIVE_H))
-S_V_SURF.fill("grey16")
-S_H_SURF = pg.Surface((NATIVE_W, 1))
-S_H_SURF.fill("grey16")
-CAM_RECT = pg.FRect(0, 0, NATIVE_W, NATIVE_H)
-CAM_SPD = 0.09
-CAM_LERP_FACTOR = 0.2
-HIGHLIGHT_TILE_SURFACE = pg.Surface((TILE_S, TILE_S))
-HIGHLIGHT_TILE_SURFACE.fill("grey100")
-HIGHLIGHT_TILE_SURFACE.set_alpha(122)
-CURSOR_RECT = pg.FRect(0, 0, TILE_S, TILE_S)
-
-# Bitmasks
-BITMASK_REGION_DICT = {
-    "floor": {
-        208: (320, 0, 16, 16),
-        248: (336, 0, 16, 16),
-        104: (352, 0, 16, 16),
-        64: (368, 0, 16, 16),
-        80: (384, 0, 16, 16),
-        120: (400, 0, 16, 16),
-        216: (416, 0, 16, 16),
-        72: (432, 0, 16, 16),
-        88: (448, 0, 16, 16),
-        219: (464, 0, 16, 16),
-
-        214: (320, 16, 16, 16),
-        255: (336, 16, 16, 16),
-        107: (352, 16, 16, 16),
-        66: (368, 16, 16, 16),
-        86: (384, 16, 16, 16),
-        127: (400, 16, 16, 16),
-        223: (416, 16, 16, 16),
-        75: (432, 16, 16, 16),
-        95: (448, 16, 16, 16),
-        126: (464, 16, 16, 16),
-
-        22: (320, 32, 16, 16),
-        31: (336, 32, 16, 16),
-        11: (352, 32, 16, 16),
-        2: (368, 32, 16, 16),
-        210: (384, 32, 16, 16),
-        251: (400, 32, 16, 16),
-        254: (416, 32, 16, 16),
-        106: (432, 32, 16, 16),
-        250: (448, 32, 16, 16),
-        218: (464, 32, 16, 16),
-        122: (480, 32, 16, 16),
-
-        16: (320, 48, 16, 16),
-        24: (336, 48, 16, 16),
-        8: (352, 48, 16, 16),
-        0: (368, 48, 16, 16),
-        18: (384, 48, 16, 16),
-        27: (400, 48, 16, 16),
-        30: (416, 48, 16, 16),
-        10: (432, 48, 16, 16),
-        26: (448, 48, 16, 16),
-        94: (464, 48, 16, 16),
-        91: (480, 48, 16, 16),
-
-        82: (384, 64, 16, 16),
-        123: (400, 64, 16, 16),
-        222: (416, 64, 16, 16),
-        74: (432, 64, 16, 16),
-        90: (448, 64, 16, 16),
-    },
-    "rock": {
-        208: (320, 80, 16, 16),
-        248: (336, 80, 16, 16),
-        104: (352, 80, 16, 16),
-        64: (368, 80, 16, 16),
-        80: (384, 80, 16, 16),
-        120: (400, 80, 16, 16),
-        216: (416, 80, 16, 16),
-        72: (432, 80, 16, 16),
-        88: (448, 80, 16, 16),
-        219: (464, 80, 16, 16),
-
-        214: (320, 96, 16, 16),
-        255: (336, 96, 16, 16),
-        107: (352, 96, 16, 16),
-        66: (368, 96, 16, 16),
-        86: (384, 96, 16, 16),
-        127: (400, 96, 16, 16),
-        223: (416, 96, 16, 16),
-        75: (432, 96, 16, 16),
-        95: (448, 96, 16, 16),
-        126: (464, 96, 16, 16),
-
-        22: (320, 112, 16, 16),
-        31: (336, 112, 16, 16),
-        11: (352, 112, 16, 16),
-        2: (368, 112, 16, 16),
-        210: (384, 112, 16, 16),
-        251: (400, 112, 16, 16),
-        254: (416, 112, 16, 16),
-        106: (432, 112, 16, 16),
-        250: (448, 112, 16, 16),
-        218: (464, 112, 16, 16),
-        122: (480, 112, 16, 16),
-
-        16: (320, 128, 16, 16),
-        24: (336, 128, 16, 16),
-        8: (352, 128, 16, 16),
-        0: (368, 128, 16, 16),
-        18: (384, 128, 16, 16),
-        27: (400, 128, 16, 16),
-        30: (416, 128, 16, 16),
-        10: (432, 128, 16, 16),
-        26: (448, 128, 16, 16),
-        94: (464, 128, 16, 16),
-        91: (480, 128, 16, 16),
-
-        82: (384, 144, 16, 16),
-        123: (400, 144, 16, 16),
-        222: (416, 144, 16, 16),
-        74: (432, 144, 16, 16),
-        90: (448, 144, 16, 16),
-    },
-    "bg_rock": {
-        208: (320, 160, 16, 16),
-        248: (336, 160, 16, 16),
-        104: (352, 160, 16, 16),
-        64: (368, 160, 16, 16),
-        80: (384, 160, 16, 16),
-        120: (400, 160, 16, 16),
-        216: (416, 160, 16, 16),
-        72: (432, 160, 16, 16),
-        88: (448, 160, 16, 16),
-        219: (464, 160, 16, 16),
-
-        214: (320, 176, 16, 16),
-        255: (336, 176, 16, 16),
-        107: (352, 176, 16, 16),
-        66: (368, 176, 16, 16),
-        86: (384, 176, 16, 16),
-        127: (400, 176, 16, 16),
-        223: (416, 176, 16, 16),
-        75: (432, 176, 16, 16),
-        95: (448, 176, 16, 16),
-        126: (464, 176, 16, 16),
-
-        22: (320, 192, 16, 16),
-        31: (336, 192, 16, 16),
-        11: (352, 192, 16, 16),
-        2: (368, 192, 16, 16),
-        210: (384, 192, 16, 16),
-        251: (400, 192, 16, 16),
-        254: (416, 192, 16, 16),
-        106: (432, 192, 16, 16),
-        250: (448, 192, 16, 16),
-        218: (464, 192, 16, 16),
-        122: (480, 192, 16, 16),
-
-        16: (320, 208, 16, 16),
-        24: (336, 208, 16, 16),
-        8: (352, 208, 16, 16),
-        0: (368, 208, 16, 16),
-        18: (384, 208, 16, 16),
-        27: (400, 208, 16, 16),
-        30: (416, 208, 16, 16),
-        10: (432, 208, 16, 16),
-        26: (448, 208, 16, 16),
-        94: (464, 208, 16, 16),
-        91: (480, 208, 16, 16),
-
-        82: (384, 224, 16, 16),
-        123: (400, 224, 16, 16),
-        222: (416, 224, 16, 16),
-        74: (432, 224, 16, 16),
-        90: (448, 224, 16, 16),
-    }
-}
-
-# Sprite sheet setting
-SPRITE_SHEET_PNG_NAME = "stage_1_sprite_sheet.png"
+NATIVE_SURF = pg.Surface((NATIVE_W, NATIVE_H))
+CLOCK = pg.time.Clock()
+FONT = font.Font("cg_pixel_3x5_mono.ttf", FONT_H)
+EVENTS = [pg.KEYDOWN, pg.KEYUP, pg.MOUSEBUTTONDOWN, pg.MOUSEBUTTONUP, pg.QUIT]
+CAM_RECT = pg.Rect(0, 0, NATIVE_W, NATIVE_H)
 SPRITE_SHEET_SURF = pg.image.load(SPRITE_SHEET_PNG_NAME).convert_alpha()
-CURSOR_SPRITE_SHEET_SURF = pg.image.load(SPRITE_SHEET_PNG_NAME).convert_alpha()
-CURSOR_SPRITE_SHEET_SURF.set_alpha(122)
-collision = [0 for _ in range(NATIVE_W_TILE_UNIT * NATIVE_H_TILE_UNIT)]
+ROOM_X_TU = ROOM_X_RU * NATIVE_W_TU
+ROOM_Y_TU = ROOM_Y_RU * NATIVE_H_TU
+ROOM_W_TU = ROOM_SCALE_X * NATIVE_W_TU
+ROOM_H_TU = ROOM_SCALE_Y * NATIVE_H_TU
+ROOM_RECT = pg.Rect(ROOM_X_TU * TILE_S, ROOM_Y_TU * TILE_S,
+                    ROOM_W_TU * TILE_S, ROOM_H_TU * TILE_S)
+CAM_RECT.topleft = ROOM_RECT.topleft
+LAYERS_LIST = [[0] * (ROOM_W_TU * ROOM_H_TU) for _ in range(TOTAL_LAYERS)]
+LIGHT_SURF = pg.Surface((NATIVE_W, NATIVE_H))
+LIGHT_SURF.fill("white")
+LIGHT_SURF.set_alpha(204)
+MENU_COLLISIONS = [0 for _ in range(NATIVE_W_TU * NATIVE_H_TU)]
+MENU_SURF = pg.Surface((NATIVE_W, NATIVE_H))
+MENU_SURF.fill("grey0")
+for i in range(SPRITES_LEN):
+    sprite = SPRITES[i]
+    x_tu = i % NATIVE_W_TU
+    y_tu = i // NATIVE_W_TU
+    x = x_tu * TILE_S
+    y = y_tu * TILE_S
+    MENU_COLLISIONS[i] = sprite
+    MENU_SURF.blit(SPRITE_SHEET_SURF, (x, y), (sprite.icon_region))
+    for i in range(NATIVE_W_TU + 1):
+        v = TILE_S * i
+        pg.draw.line(MENU_SURF, "grey4", (v, 0), (v, NATIVE_H))
+        pg.draw.line(MENU_SURF, "grey4", (0, v), (NATIVE_W, v))
+TALK_SFX = pg.mixer.Sound("talk.wav")
+ADD_CURSOR_SURF = pg.image.load(ADD_CURSOR_PNG_NAME).convert_alpha()
+ADD_CURSOR = pg.cursors.Cursor((16, 16), ADD_CURSOR_SURF)
+DEL_CURSOR_SURF = pg.image.load(DEL_CURSOR_PNG_NAME).convert_alpha()
+DEL_CURSOR = pg.cursors.Cursor((16, 16), DEL_CURSOR_SURF)
+pg.mouse.set_cursor(ADD_CURSOR)
+# endregion
 
-# Page 1
-PAGE_1_SURF = pg.Surface((NATIVE_W, NATIVE_H))
-PAGE_1_SURF.blits([
-    (SPRITE_SHEET_SURF, (TILE_S, TILE_S), (368, 48, TILE_S, TILE_S)),
-    (SPRITE_SHEET_SURF, (2 * TILE_S, TILE_S), (368, 128, TILE_S, TILE_S)),
-])
-PAGE_1_COLLISION = collision.copy()
-PAGE_1_COLLISION[1 * NATIVE_W_TILE_UNIT +
-                 1] = {"name": "floor", "region": (368, 48, TILE_S, TILE_S), "room": 11}
-PAGE_1_COLLISION[1 * NATIVE_W_TILE_UNIT +
-                 2] = {"name": "rock", "region": (368, 128, TILE_S, TILE_S), "room": 11}
-
-# Page 2
-PAGE_2_SURF = pg.Surface((NATIVE_W, NATIVE_H))
-PAGE_2_SURF.blits([
-    (SPRITE_SHEET_SURF, (TILE_S, TILE_S), (368, 208, TILE_S, TILE_S)),
-    (SPRITE_SHEET_SURF, (2 * TILE_S, TILE_S), (320, 240, TILE_S, TILE_S)),
-])
-PAGE_2_COLLISION = collision.copy()
-PAGE_2_COLLISION[1 * NATIVE_W_TILE_UNIT +
-                 1] = {"name": "bg_rock", "region": (368, 208, TILE_S, TILE_S), "room": 0}
-PAGE_2_COLLISION[1 * NATIVE_W_TILE_UNIT +
-                 2] = {"name": "tall_bush", "region": (320, 240, 11 * TILE_S, 2 * TILE_S), "room": 1}
-
-# Pages
-PAGE_SURFS = [
-    PAGE_1_SURF,
-    PAGE_2_SURF
-]
-PAGES_INDEX_LEN = len(PAGE_SURFS) - 1
-PAGE_COLLISIONS = [
-    PAGE_1_COLLISION,
-    PAGE_2_COLLISION
-]
-
-# Room setting
-ROOM_TL_ROOM_UNIT = (0, 0)
-ROOM_SCALE = (1, 1)
-ROOM_W_TILE_UNIT = NATIVE_W_TILE_UNIT * ROOM_SCALE[0]
-ROOM_H_TILE_UNIT = NATIVE_H_TILE_UNIT * ROOM_SCALE[1]
-ROOM_X_TILE_UNIT = ROOM_TL_ROOM_UNIT[0] * NATIVE_W_TILE_UNIT
-ROOM_Y_TILE_UNIT = ROOM_TL_ROOM_UNIT[1] * NATIVE_H_TILE_UNIT
-ROOM_X = ROOM_X_TILE_UNIT * TILE_S
-ROOM_Y = ROOM_Y_TILE_UNIT * TILE_S
-ROOM_W = ROOM_W_TILE_UNIT * TILE_S
-ROOM_H = ROOM_H_TILE_UNIT * TILE_S
-ROOM_RECT = pg.FRect(
-    ROOM_X,
-    ROOM_Y,
-    ROOM_W,
-    ROOM_H
-)
-ROOM_SURF = pg.Surface((ROOM_W, ROOM_H))
-ROOM_SURF.fill("grey4")
-CAM_RECT.topleft = (ROOM_X, ROOM_Y)
-room = [0 for _ in range(ROOM_W_TILE_UNIT * ROOM_H_TILE_UNIT)]
-ROOMS_LIST = [
-    room.copy(),  # 0 - bg_rocks
-    room.copy(),  # 1 - tall_bush
-    room.copy(),  # 2 - short_bush
-    room.copy(),  # 3 - boulders
-    room.copy(),  # 4 - small_trees
-    room.copy(),  # 5 - wall
-    room.copy(),  # 6 - pillar
-    room.copy(),  # 7 - blinder
-    room.copy(),  # 8 - scones
-    room.copy(),  # 9 - thin
-    room.copy(),  # 10 - balcony
-    room.copy(),  # 11 - floor
-    room.copy(),  # 12 - grass
-    room.copy(),  # 13 - water
-]
-selected_room = ROOMS_LIST[11]
-
-# Menu
+# region Menu vars
+# Keep track what state, the selected sprite and selected layer
 is_menu = False
-selected_name = "floor"
-selected_region = (368, 48, TILE_S, TILE_S)
-page_index = 0
-selected_page_surface = PAGE_SURFS[page_index]
-selected_page_collision = PAGE_COLLISIONS[page_index]
-selected_bitmask_region = BITMASK_REGION_DICT[selected_name]
+selected_sprite = MENU_COLLISIONS[0]
+selected_layer = LAYERS_LIST[selected_sprite.layer_i]
+# endregion
 
-# Input
+# region Rect draw vars
+# Vards needed to keep track for rect drawing style
+start_xs = 0
+start_ys = 0
+top_left = 0
+top_right = 0
+bottom_left = 0
+bottom_right = 0
+# endregion
+
+# region Input flags
+# All inputs that needs to be tracked are here
 is_w_pressed = 0
 is_a_pressed = 0
 is_s_pressed = 0
@@ -301,93 +1467,65 @@ is_lmb_pressed = False
 is_rmb_pressed = False
 is_mmb_pressed = False
 is_shift_pressed = False
+# endregion
 
-# Draw rect
-start_pos = (0, 0)
-end_pos = (0, 0)
-
-# Cam
-cam_dir = pg.math.Vector2(0, 0)
-cam_vel = pg.math.Vector2(0, 0)
+# region Helper functions
 
 
-def fill(position_tile_unit, draw_position, l=0, t=0, r=ROOM_W_TILE_UNIT, b=ROOM_H_TILE_UNIT):
+def update_bitmasks(x_tu, y_tu, xds, yds, last=False):
     # Create a blink effect on tile that mask about to change
-    NATIVE_SURF.blit(HIGHLIGHT_TILE_SURFACE,
-                     (draw_position[0] - CAM_RECT.x, draw_position[1] - CAM_RECT.y))
-
-    x = position_tile_unit[0]
-    y = position_tile_unit[1]
-    neighbour_pos_tile_units = [
-        (x - 0, y - 1),
-        (x - 1, y - 0),                 (x + 1, y - 0), (x - 0, y + 1)
-    ]
-    for pos in neighbour_pos_tile_units:
-        # Get tile from map
-        neighbour_pos_tile_unit_x = pos[0]
-        neighbour_pos_tile_unit_y = pos[1]
-        if (l <= neighbour_pos_tile_unit_x < r) and (t <= neighbour_pos_tile_unit_y < b):
-            neighbour = selected_room[
-                neighbour_pos_tile_unit_y * ROOM_W_TILE_UNIT + neighbour_pos_tile_unit_x]
-
-            # Air?
-            if neighbour == 0:
-                # Fill
-                neighbour_draw_pos_x = (
-                    neighbour_pos_tile_unit_x + ROOM_X_TILE_UNIT) * TILE_S
-                neighbour_draw_pos_y = (
-                    neighbour_pos_tile_unit_y + ROOM_Y_TILE_UNIT) * TILE_S
-                selected_room[neighbour_pos_tile_unit_y * NATIVE_W_TILE_UNIT + neighbour_pos_tile_unit_x] = {"pos": (
-                    neighbour_draw_pos_x, neighbour_draw_pos_y), "region": selected_region, "name": selected_name}
-                fill(
-                    (neighbour_pos_tile_unit_x, neighbour_pos_tile_unit_y),
-                    (neighbour_draw_pos_x, neighbour_draw_pos_y), l, t, r, b
-                )
-                if selected_name in ["floor", "rock", "bg_rock"]:
-                    update_bitmasks(
-                        (neighbour_pos_tile_unit_x, neighbour_pos_tile_unit_y), (neighbour_draw_pos_x, neighbour_draw_pos_y))
-
-
-def update_bitmasks(position_tile_unit, draw_position, last=False):
-    # Create a blink effect on tile that mask about to change
-    NATIVE_SURF.blit(HIGHLIGHT_TILE_SURFACE,
-                     (draw_position[0] - CAM_RECT.x, draw_position[1] - CAM_RECT.y))
+    xs = xds - CAM_RECT.x
+    ys = yds - CAM_RECT.y
+    NATIVE_SURF.blit(LIGHT_SURF, (xs, ys), (0, 0, TILE_S, TILE_S))
 
     # Raw bits
     br, b, bl, r, l, tr, t, tl = 0, 0, 0, 0, 0, 0, 0, 0
 
-    x = position_tile_unit[0]
-    y = position_tile_unit[1]
-    neighbour_pos_tile_units = [
-        (x - 1, y - 1), (x - 0, y - 1), (x + 1, y - 1),
-        (x - 1, y - 0),                 (x + 1, y - 0),
-        (x - 1, y + 1), (x - 0, y + 1), (x + 1, y + 1)
+    # Check my neighbour positions
+    neighbour_pos_tu = [
+        (x_tu - 1, y_tu - 1), (x_tu - 0, y_tu - 1), (x_tu + 1, y_tu - 1),
+        (x_tu - 1, y_tu - 0),                       (x_tu + 1, y_tu - 0),
+        (x_tu - 1, y_tu + 1), (x_tu - 0, y_tu + 1), (x_tu + 1, y_tu + 1)
     ]
-    for pos in neighbour_pos_tile_units:
-        # Get tile from map
-        neighbour_pos_tile_unit_x = pos[0]
-        neighbour_pos_tile_unit_y = pos[1]
-        if (0 <= neighbour_pos_tile_unit_x < ROOM_W_TILE_UNIT) and (0 <= neighbour_pos_tile_unit_y < ROOM_H_TILE_UNIT):
-            neighbour = selected_room[
-                neighbour_pos_tile_unit_y * ROOM_W_TILE_UNIT + neighbour_pos_tile_unit_x]
+    if selected_sprite.name in ["Pillar", "BalconySupport"]:
+        neighbour_pos_tu = [
+            (x_tu - 0, y_tu - 1),
+            (x_tu - 0, y_tu + 1),
+        ]
+    elif selected_sprite.name in ["Balcony", "Rail", "WallFence"]:
+        neighbour_pos_tu = [
+            (x_tu - 1, y_tu - 0), (x_tu + 1, y_tu - 0),
+        ]
+    for pos in neighbour_pos_tu:
+        # Get tile from collision list
+        neighbour_x_tu = pos[0]
+        neighbour_y_tu = pos[1]
+
+        # Make sure that pos is inside the list
+        if (0 <= neighbour_x_tu < ROOM_W_TU) and (0 <= neighbour_y_tu < ROOM_H_TU):
+            neighbour = selected_layer[neighbour_y_tu *
+                                       ROOM_W_TU + neighbour_x_tu]
 
             # Air? check other position
             if neighbour == 0:
                 continue
 
-            # Found neighbour
-            neighbour_draw_pos = neighbour["pos"]
+            # Windows do not mix
+            if selected_sprite.name in ["BigWindow", "WallWindow"]:
+                if selected_sprite.name != neighbour.name:
+                    continue
 
-            # Tell my neighbour to update their frame index
+            # Found! Tell my neighbour to update bitmask
             if last == False:
                 update_bitmasks(
-                    (neighbour_pos_tile_unit_x, neighbour_pos_tile_unit_y),
-                    (neighbour_draw_pos[0], neighbour_draw_pos[1]),
+                    neighbour_x_tu, neighbour_y_tu,
+                    neighbour.xds, neighbour.yds,
                     last=True
                 )
 
-            dx = neighbour_pos_tile_unit_x - x
-            dy = neighbour_pos_tile_unit_y - y
+            # Cook bitmask -> mask_id
+            dx = neighbour_x_tu - x_tu
+            dy = neighbour_y_tu - y_tu
             t += dx == 0 and dy == -1
             r += dx == 1 and dy == 0
             b += dx == 0 and dy == 1
@@ -400,17 +1538,69 @@ def update_bitmasks(position_tile_unit, draw_position, last=False):
     tl = tl and t and l
     br = br and b and r
     bl = bl and b and l
+
     mask_id = (br << 7) | (b << 6) | (bl << 5) | (
         r << 4) | (l << 3) | (tr << 2) | (t << 1) | tl
 
-    # Update region of this tile position with cooked bitmask
-    tile = selected_room[y * ROOM_W_TILE_UNIT + x]
+    # Update region of this tile (passed arg) with cooked bitmask
+    sprite = selected_layer[y_tu * ROOM_W_TU + x_tu]
 
-    # In case this tile is from deleted
-    if tile != 0:
-        new_region = BITMASK_REGION_DICT[tile["name"]][mask_id]
-        selected_room[y * NATIVE_W_TILE_UNIT +
-                      x] = {"pos": draw_position, "region": new_region, "name": tile["name"]}
+    # In case this tile is from deleted draw, then I cannot update this tile
+    if sprite != 0:
+        if sprite.name in ["BigWindowLamp", "WallWindowLamp"]:
+            return
+        new_region = sprite.regions[mask_id]
+        if new_region != 0:
+            sprite.region = new_region
+
+
+def bucket_fill(x_tu, y_tu, xds, yds):
+    # Create a blink effect on tile that mask about to change
+    xs = xds - CAM_RECT.x
+    ys = yds - CAM_RECT.y
+    NATIVE_SURF.blit(LIGHT_SURF, (xs, ys), (0, 0, TILE_S, TILE_S))
+
+    # Check my neighbours, but not corners
+    neighbour_pos_tu = [
+        (x_tu - 0, y_tu - 1), (x_tu - 1, y_tu - 0),
+        (x_tu + 1, y_tu - 0), (x_tu - 0, y_tu + 1)
+    ]
+    for pos in neighbour_pos_tu:
+        # Get tile from collision list
+        neighbour_x_tu = pos[0]
+        neighbour_y_tu = pos[1]
+
+        # Make sure that pos is inside the list
+        if (0 <= neighbour_x_tu < ROOM_W_TU) and (0 <= neighbour_y_tu < ROOM_H_TU):
+            neighbour = selected_layer[neighbour_y_tu *
+                                       ROOM_W_TU + neighbour_x_tu]
+
+            # Air? Instance new sprite
+            if neighbour == 0:
+                # Prepare real draw positions
+                neighbour_xd_tu = neighbour_x_tu + ROOM_X_TU
+                neighbour_yd_tu = neighbour_y_tu + ROOM_Y_TU
+                neighbour_xds = neighbour_xd_tu * TILE_S
+                neighbour_yds = neighbour_yd_tu * TILE_S
+
+                # Instance new sprite
+                new_sprite = selected_sprite.duplicate()
+                new_sprite.xds = neighbour_xds
+                new_sprite.yds = neighbour_yds
+                selected_layer[neighbour_y_tu *
+                               ROOM_W_TU + neighbour_x_tu] = new_sprite
+
+                # Tell my neighbour to fill
+                bucket_fill(
+                    neighbour_x_tu, neighbour_y_tu,
+                    neighbour_xds, neighbour_yds,
+                )
+
+                # Update bistmasks if it is bitmask type
+                if new_sprite.name in BITMASK_TYPE_SPRITE_NAMES:
+                    update_bitmasks(neighbour_x_tu, neighbour_y_tu,
+                                    neighbour_xds, neighbour_yds)
+# endregion
 
 
 # Main loop
@@ -418,301 +1608,532 @@ while 1:
     # Dt
     dt = CLOCK.tick(FPS)
 
-    # Get event
-    for event in pg.event.get(EVENTS):
-        # Window quit
-        if event.type == pg.QUIT:
-            pg.quit()
-            exit()
-
-        # Key down
-        if event.type == pg.KEYDOWN:
-            # Normal state
-            if not is_menu:
-                # For cam movement input
-                if event.key == pg.K_w:
-                    is_w_pressed = 1
-                if event.key == pg.K_a:
-                    is_a_pressed = 1
-                if event.key == pg.K_s:
-                    is_s_pressed = 1
-                if event.key == pg.K_d:
-                    is_d_pressed = 1
-                # Open menu
-                if event.key == pg.K_SPACE:
-                    is_menu = True
-                # Rect draw mode
-                if event.key == pg.K_LSHIFT:
-                    is_shift_pressed = True
-                    pos = pg.mouse.get_pos()
-                    pos_x = pos[0] // RESOLUTION
-                    pos_y = pos[1] // RESOLUTION
-                    draw_pos_tile_x = (pos_x + int(CAM_RECT.x)) // TILE_S
-                    draw_pos_tile_y = (pos_y + int(CAM_RECT.y)) // TILE_S
-                    draw_pos_x = draw_pos_tile_x * TILE_S
-                    draw_pos_y = draw_pos_tile_y * TILE_S
-                    x = draw_pos_tile_x - ROOM_X_TILE_UNIT
-                    y = draw_pos_tile_y - ROOM_Y_TILE_UNIT
-                    # Only render when it is in room
-                    if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
-                        start_pos = (draw_pos_x, draw_pos_y)
-
-            # Menu state
-            else:
-                # Cycle pages
-                direction = int(event.key == pg.K_d) - int(event.key == pg.K_a)
-                page_index += direction
-                page_index = max(0, min(page_index, PAGES_INDEX_LEN))
-                selected_page_surface = PAGE_SURFS[page_index]
-                selected_page_collision = PAGE_COLLISIONS[page_index]
-                # Close menu
-                if event.key == pg.K_SPACE:
-                    is_menu = False
-
-        # Key up
-        elif event.type == pg.KEYUP:
-            # Normal state
-            if not is_menu:
-                # For cam movement input
-                if event.key == pg.K_w:
-                    is_w_pressed = 0
-                if event.key == pg.K_a:
-                    is_a_pressed = 0
-                if event.key == pg.K_s:
-                    is_s_pressed = 0
-                if event.key == pg.K_d:
-                    is_d_pressed = 0
-                # Draw rect
-                if event.key == pg.K_LSHIFT:
-                    is_shift_pressed = False
-                    start_draw_pos_tile_x, start_draw_pos_tile_y = start_pos[
-                        0] // TILE_S, start_pos[1] // TILE_S
-                    end_draw_pos_tile_x, end_draw_pos_tile_y = end_pos[0] // TILE_S, end_pos[1] // TILE_S
-                    x, y = start_draw_pos_tile_x - \
-                        ROOM_X_TILE_UNIT, start_draw_pos_tile_y - ROOM_Y_TILE_UNIT
-                    x2, y2 = end_draw_pos_tile_x - \
-                        ROOM_X_TILE_UNIT, end_draw_pos_tile_y - ROOM_Y_TILE_UNIT
-                    l, t = min(x, x2), min(y, y2)
-                    r, b = max(x, x2), max(y, y2)
-                    selected_room[y * NATIVE_W_TILE_UNIT + x] = {
-                        "pos": (start_draw_pos_tile_x * TILE_S, start_draw_pos_tile_y * TILE_S),
-                        "region": selected_region,
-                        "name": selected_name
-                    }
-                    fill((start_draw_pos_tile_x, start_draw_pos_tile_y),
-                         (start_pos[0], start_pos[1]), l, t, r + 1, b + 1)
-                    start_pos = end_pos = (0, 0)
-
-        # Mouse down
-        if event.type == pg.MOUSEBUTTONDOWN:
-            # Normal state
-            if not is_menu:
-                # For drawing
-                if event.button == 1:
-                    is_lmb_pressed = True
-                if event.button == 2:
-                    is_mmb_pressed = True
-                if event.button == 3:
-                    is_rmb_pressed = True
-
-        # Mouse up
-        elif event.type == pg.MOUSEBUTTONUP:
-            # Normal state
-            if not is_menu:
-                # For drawing
-                if event.button == 1:
-                    is_lmb_pressed = False
-                if event.button == 2:
-                    is_mmb_pressed = False
-                if event.button == 3:
-                    is_rmb_pressed = False
-
-            # Menu state
-            else:
-                # Select menu item
-                pos = pg.mouse.get_pos()
-                pos_x = pos[0] // RESOLUTION
-                pos_y = pos[1] // RESOLUTION
-                pos_tile_x = pos_x // TILE_S
-                pos_tile_y = pos_y // TILE_S
-                item = selected_page_collision[pos_tile_y *
-                                               NATIVE_W_TILE_UNIT + pos_tile_x]
-                if item != 0:
-                    selected_name = item["name"]
-                    selected_region = item["region"]
-                    selected_room = ROOMS_LIST[item["room"]]
-                    if selected_name in ["floor", "rock", "bg_rock"]:
-                        selected_bitmask_region = BITMASK_REGION_DICT[selected_name]
-                    is_menu = False
-
     # Menu state
     if is_menu:
-        # Clear
+        # Clear native
         NATIVE_SURF.fill("grey0")
 
-        # Draw selected page
-        NATIVE_SURF.blit(selected_page_surface, (0, 0))
-
-        # Draw hover cursor
+        # region Draw menu surface and item hover
+        NATIVE_SURF.blit(MENU_SURF, (0, 0))
         pos = pg.mouse.get_pos()
-        pos_x = pos[0] // RESOLUTION
-        pos_y = pos[1] // RESOLUTION
-        pos_tile_x = pos_x // TILE_S
-        pos_tile_y = pos_y // TILE_S
-        pos_tile_snap_x = pos_tile_x * TILE_S
-        pos_tile_snap_y = pos_tile_y * TILE_S
-        item = selected_page_collision[pos_tile_y *
-                                       NATIVE_W_TILE_UNIT + pos_tile_x]
-        if item != 0:
-            NATIVE_SURF.blit(HIGHLIGHT_TILE_SURFACE,
-                             (pos_tile_snap_x, pos_tile_snap_y))
+        x = pos[0] // RESOLUTION
+        y = pos[1] // RESOLUTION
+        x_tu = x // TILE_S
+        y_tu = y // TILE_S
+        xs = x_tu * TILE_S
+        ys = y_tu * TILE_S
+        cell = MENU_COLLISIONS[y_tu * NATIVE_W_TU + x_tu]
+        if cell != 0:
+            NATIVE_SURF.blit(LIGHT_SURF, (xs, ys), (0, 0, TILE_S, TILE_S))
+        # endregion
+
+        # region Draw cursor
+        r = xs + TILE_S
+        b = ys + TILE_S
+        pg.draw.lines(NATIVE_SURF, "white", True, [
+                      (xs, ys), (r, ys), (r, ys), (r, b), (r, b), (xs, b)], 1)
+        # endregion
 
     # Normal state
     else:
-        # Clear
-        NATIVE_SURF.fill("grey12")
+        # Clear native
+        NATIVE_SURF.fill("grey0")
 
-        # Draw room
-        room_draw_pos_x = ROOM_RECT.x - CAM_RECT.x
-        room_draw_pos_y = ROOM_RECT.y - CAM_RECT.y
-        NATIVE_SURF.blit(ROOM_SURF, (room_draw_pos_x, room_draw_pos_y))
+        # region Move camera
+        if not is_shift_pressed:
+            # Cannot move during rect draw
+            CAM_RECT.x += (is_d_pressed - is_a_pressed) * CAM_SPD
+            CAM_RECT.y += (is_s_pressed - is_w_pressed) * CAM_SPD
+            CAM_RECT.clamp_ip(ROOM_RECT)
+        # endregion
 
-        # Draw grid
-        for i in range(NATIVE_W_TILE_UNIT):
+        # region Draw grid
+        for i in range(NATIVE_W_TU):
             offset = TILE_S * i
-            x = (-CAM_RECT.x + (offset)) % NATIVE_W
-            y = (-CAM_RECT.y + (offset)) % NATIVE_H
-            NATIVE_SURF.blits([(V_SURF, (x, 0)), (H_SURF, (0, y))])
-        x = -CAM_RECT.x % NATIVE_W
-        y = -CAM_RECT.y % NATIVE_H
-        NATIVE_SURF.blits([(S_V_SURF, (x, 0)), (S_H_SURF, (0, y))])
+            xd = (offset - CAM_RECT.x) % NATIVE_W
+            yd = (offset - CAM_RECT.y) % NATIVE_H
+            pg.draw.line(NATIVE_SURF, "grey4", (xd, 0), (xd, NATIVE_H))
+            pg.draw.line(NATIVE_SURF, "grey4", (0, yd), (NATIVE_W, yd))
+        xd = -CAM_RECT.x % NATIVE_W
+        yd = -CAM_RECT.y % NATIVE_H
+        pg.draw.line(NATIVE_SURF, "grey8", (xd, 0), (xd, NATIVE_H))
+        pg.draw.line(NATIVE_SURF, "grey8", (0, yd), (NATIVE_W, yd))
         FONT.render_to(
-            NATIVE_SURF, (x, FONT_H), f"{
-                CAM_RECT.x // NATIVE_W + 1}", "grey100"
+            NATIVE_SURF, (xd + FONT_W, yd + FONT_H), f"{
+                (CAM_RECT.x - 1) // NATIVE_W + 1}{
+                (CAM_RECT.y - 1) // NATIVE_H + 1}", "grey100"
         )
-        FONT.render_to(
-            NATIVE_SURF, (FONT_W, y), f"{
-                CAM_RECT.y // NATIVE_H + 1}", "grey100"
-        )
-        NATIVE_SURF.blit(
-            ORIGIN_SURF, (-CAM_RECT.x, -CAM_RECT.y)
-        )
+        # endregion
 
-        # Draw sprite
-        for room in ROOMS_LIST:
+        # region Draw room
+        xd = ROOM_RECT.x - CAM_RECT.x - 1
+        yd = ROOM_RECT.y - CAM_RECT.y - 1
+        b = yd + ROOM_RECT.height
+        r = xd + ROOM_RECT.width
+        pg.draw.lines(NATIVE_SURF, "red", True, [
+                      (xd, yd), (r, yd), (r, yd), (r, b), (r, b), (xd, b)], 2)
+        # endregion
+
+        # region Draw all sprites on grid
+        for room in LAYERS_LIST:
             for item in room:
                 if item != 0:
-                    pos = item["pos"]
-                    region = item["region"]
-                    w, h = region[2], region[3]
-                    x, y = pos
-                    # Only render when it is in camera
-                    if (CAM_RECT.x - w <= x < CAM_RECT.right) and (CAM_RECT.y - h <= y < CAM_RECT.bottom):
-                        tile_draw_pos_x = x - CAM_RECT.x
-                        tile_draw_pos_y = y - CAM_RECT.y
-                        NATIVE_SURF.blit(
-                            SPRITE_SHEET_SURF, (tile_draw_pos_x, tile_draw_pos_y), region)
+                    # Only update sprites that are in view
+                    if (CAM_RECT.x - item.region[2] <= item.xds < CAM_RECT.right) and (CAM_RECT.y - item.region[3] <= item.yds < CAM_RECT.bottom):
+                        item.update(dt)
+        # endregion
+
+        # region Draw cursor
+        pos = pg.mouse.get_pos()
+        x = pos[0] // RESOLUTION
+        y = pos[1] // RESOLUTION
+        xd = x + CAM_RECT.x
+        yd = y + CAM_RECT.y
+        xd_tu = xd // TILE_S
+        yd_tu = yd // TILE_S
+        xds = xd_tu * TILE_S
+        yds = yd_tu * TILE_S
+        # Remove room offset to be collision index
+        x_tu = xd_tu - ROOM_X_TU
+        y_tu = yd_tu - ROOM_Y_TU
+        # Cursor position global pos
+        xs = xds - CAM_RECT.x
+        ys = yds - CAM_RECT.y
+        r = xs + selected_sprite.region[2]
+        b = ys + selected_sprite.region[3]
+        if not is_shift_pressed:
+            pg.draw.lines(NATIVE_SURF, "white", True, [
+                (xs, ys), (r, ys), (r, ys), (r, b), (r, b), (xs, b)], 1)
+        # endregion
 
         # Rect draw mode
         if is_shift_pressed:
-            pos = pg.mouse.get_pos()
-            pos_x = pos[0] // RESOLUTION
-            pos_y = pos[1] // RESOLUTION
-            draw_pos_tile_x = (pos_x + int(CAM_RECT.x)) // TILE_S
-            draw_pos_tile_y = (pos_y + int(CAM_RECT.y)) // TILE_S
-            draw_pos_x = draw_pos_tile_x * TILE_S
-            draw_pos_y = draw_pos_tile_y * TILE_S
-            x = draw_pos_tile_x - ROOM_X_TILE_UNIT
-            y = draw_pos_tile_y - ROOM_Y_TILE_UNIT
-            # Only render when it is in room
-            if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
-                start_draw_pos_x = start_pos[0] - CAM_RECT.x
-                start_draw_pos_y = start_pos[1] - CAM_RECT.y
-                end_pos = (draw_pos_x, draw_pos_y)
-                end_draw_pos_x = draw_pos_x - CAM_RECT.x
-                end_draw_pos_y = draw_pos_y - CAM_RECT.y
-                if start_draw_pos_x < end_draw_pos_x:
-                    end_draw_pos_x += TILE_S
-                else:
-                    start_draw_pos_x += TILE_S
-                if start_draw_pos_y < end_draw_pos_y:
-                    end_draw_pos_y += TILE_S
-                else:
-                    start_draw_pos_y += TILE_S
-                pg.draw.line(NATIVE_SURF, "red", (start_draw_pos_x,
-                             start_draw_pos_y), (end_draw_pos_x, start_draw_pos_y))
-                pg.draw.line(NATIVE_SURF, "red", (start_draw_pos_x,
-                             start_draw_pos_y), (start_draw_pos_x, end_draw_pos_y))
-                pg.draw.line(NATIVE_SURF, "red", (end_draw_pos_x,
-                             end_draw_pos_y), (start_draw_pos_x, end_draw_pos_y))
-                pg.draw.line(NATIVE_SURF, "red", (end_draw_pos_x,
-                             end_draw_pos_y), (end_draw_pos_x, start_draw_pos_y))
-
-        # Normal draw mode
-        else:
-            # Draw cursor
-            pos = pg.mouse.get_pos()
-            pos_x = pos[0] // RESOLUTION
-            pos_y = pos[1] // RESOLUTION
-            draw_pos_tile_x = (pos_x + int(CAM_RECT.x)) // TILE_S
-            draw_pos_tile_y = (pos_y + int(CAM_RECT.y)) // TILE_S
-            draw_pos_x = draw_pos_tile_x * TILE_S
-            draw_pos_y = draw_pos_tile_y * TILE_S
-            x = draw_pos_tile_x - ROOM_X_TILE_UNIT
-            y = draw_pos_tile_y - ROOM_Y_TILE_UNIT
-            # Only render when it is in room
-            if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
-                cursor_draw_pos_x = draw_pos_x - CAM_RECT.x
-                cursor_draw_pos_y = draw_pos_y - CAM_RECT.y
-                NATIVE_SURF.blit(CURSOR_SPRITE_SHEET_SURF,
-                                 (cursor_draw_pos_x, cursor_draw_pos_y), selected_region)
-
-            # Draw
+            # region Draw the white rect cursor
             if is_lmb_pressed:
-                if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
-                    item = selected_room[y * NATIVE_W_TILE_UNIT + x]
-                    if item == 0:
-                        selected_room[y * NATIVE_W_TILE_UNIT + x] = {"pos": (
-                            draw_pos_x, draw_pos_y), "region": selected_region, "name": selected_name}
-                        if selected_name in ["floor", "rock", "bg_rock"]:
-                            update_bitmasks((x, y), (draw_pos_x, draw_pos_y))
+                if start_xs <= xs:
+                    xs += TILE_S
+                if start_ys <= ys:
+                    ys += TILE_S
+                top_left = (max(min(start_xs, xs), 0),
+                            max(min(start_ys, ys), 0))
+                top_right = (min(max(start_xs, xs), NATIVE_W),
+                             max(min(start_ys, ys), 0))
+                bottom_left = (max(min(start_xs, xs), 0),
+                               min(max(start_ys, ys), NATIVE_H))
 
-            # Erase
+                bottom_right = (min(max(start_xs, xs), NATIVE_W),
+                                min(max(start_ys, ys), NATIVE_H))
+                pg.draw.lines(NATIVE_SURF, "white", True, [
+                    top_left, top_right, bottom_right, bottom_left], 1)
+            # endregion
+
+            # region Draw the red rect cursor
             elif is_rmb_pressed:
-                if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
-                    item = selected_room[y * NATIVE_W_TILE_UNIT + x]
-                    if item != 0:
-                        selected_room[y * NATIVE_W_TILE_UNIT + x] = 0
-                        if selected_name in ["floor", "rock", "bg_rock"]:
-                            update_bitmasks((x, y), (draw_pos_x, draw_pos_y))
+                if start_xs <= xs:
+                    xs += TILE_S
+                if start_ys <= ys:
+                    ys += TILE_S
+                top_left = (max(min(start_xs, xs), 0),
+                            max(min(start_ys, ys), 0))
+                top_right = (min(max(start_xs, xs), NATIVE_W),
+                             max(min(start_ys, ys), 0))
+                bottom_left = (max(min(start_xs, xs), 0),
+                               min(max(start_ys, ys), NATIVE_H))
 
-            # Fill
-            elif is_mmb_pressed:
-                if (0 <= x < ROOM_W_TILE_UNIT) and (0 <= y < ROOM_H_TILE_UNIT):
-                    item = selected_room[y * NATIVE_W_TILE_UNIT + x]
+                bottom_right = (min(max(start_xs, xs), NATIVE_W),
+                                min(max(start_ys, ys), NATIVE_H))
+                pg.draw.lines(NATIVE_SURF, "red", True, [
+                    top_left, top_right, bottom_right, bottom_left], 1)
+            # endregion
+
+        # Normal drawing mode
+        else:
+            # region Add sprite on grid
+            if is_lmb_pressed:
+                item = selected_layer[y_tu * ROOM_W_TU + x_tu]
+                if item == 0:
+                    # Check if sprite right side and bottom side does not overshoot room rect
+                    r = xds + selected_sprite.region[2]
+                    b = yds + selected_sprite.region[3]
+                    if not r > ROOM_RECT.right and not b > ROOM_RECT.bottom:
+                        new_sprite = selected_sprite.duplicate()
+                        new_sprite.xds = xds
+                        new_sprite.yds = yds
+                        selected_layer[y_tu * ROOM_W_TU + x_tu] = new_sprite
+                        NATIVE_SURF.blit(LIGHT_SURF, (xs, ys),
+                                         (0, 0, selected_sprite.region[2], selected_sprite.region[3],))
+                        TALK_SFX.play()
+                        if new_sprite.name in BITMASK_TYPE_SPRITE_NAMES:
+                            update_bitmasks(x_tu, y_tu, xds, yds)
+            # endregion
+
+            # region Del sprite on grid
+            if is_rmb_pressed:
+                item = selected_layer[y_tu * ROOM_W_TU + x_tu]
+                if item != 0:
+                    selected_layer[y_tu * ROOM_W_TU + x_tu] = 0
+                    NATIVE_SURF.blit(LIGHT_SURF, (xs, ys),
+                                     (0, 0, selected_sprite.region[2], selected_sprite.region[3],))
+                    TALK_SFX.play()
+                    if item.name in BITMASK_TYPE_SPRITE_NAMES:
+                        update_bitmasks(x_tu, y_tu, xds, yds)
+            # endregion
+
+    # Get event
+    for event in pg.event.get(EVENTS):
+        # region Window quit
+        if event.type == pg.QUIT:
+            pg.quit()
+            exit()
+        # endregion
+
+        # Key down
+        if event.type == pg.KEYDOWN:
+            # region Cam input flag
+            if event.key == pg.K_w:
+                is_w_pressed = 1
+            if event.key == pg.K_a:
+                is_a_pressed = 1
+            if event.key == pg.K_s:
+                is_s_pressed = 1
+            if event.key == pg.K_d:
+                is_d_pressed = 1
+            # endregion
+
+            # region Rect draw input flag
+            if event.key == pg.K_LSHIFT:
+                is_shift_pressed = True
+            # endregion
+
+        # Key up
+        elif event.type == pg.KEYUP:
+            # region Cam input flag
+            if event.key == pg.K_w:
+                is_w_pressed = 0
+            if event.key == pg.K_a:
+                is_a_pressed = 0
+            if event.key == pg.K_s:
+                is_s_pressed = 0
+            if event.key == pg.K_d:
+                is_d_pressed = 0
+            # endregion
+
+            # region Open menu
+            if event.key == pg.K_SPACE:
+                is_menu = not is_menu
+                TALK_SFX.play()
+                pg.mouse.set_cursor(ADD_CURSOR)
+                NATIVE_SURF.blit(LIGHT_SURF, (0, 0))
+            # endregion
+
+            # region Rect draw input flag
+            if event.key == pg.K_LSHIFT:
+                is_shift_pressed = False
+                start_xs = 0
+                start_ys = 0
+                top_left = 0
+                top_right = 0
+                bottom_left = 0
+                bottom_right = 0
+            # endregion
+
+            # Delete all button
+            if event.key == pg.K_0:
+                is_something_deleted = False
+                for room in LAYERS_LIST:
+                    for i in range(len(room)):
+                        item = room[i]
+                        if item != 0:
+                            is_something_deleted = True
+                            xs = item.xds - CAM_RECT.x
+                            ys = item.yds - CAM_RECT.y
+                            NATIVE_SURF.blit(
+                                LIGHT_SURF, (xs, ys), (0, 0, TILE_S, TILE_S))
+                        room[i] = 0
+                if is_something_deleted:
+                    TALK_SFX.play()
+
+        # Mouse down
+        if event.type == pg.MOUSEBUTTONDOWN:
+            # region Drawing input flag
+            if event.button == 1:
+                is_lmb_pressed = True
+            if event.button == 2:
+                is_mmb_pressed = True
+            if event.button == 3:
+                is_rmb_pressed = True
+                if not is_menu:
+                    pg.mouse.set_cursor(DEL_CURSOR)
+            # endregion
+
+            # region Rect draw start pos
+            if is_shift_pressed:
+                start_xs = xs
+                start_ys = ys
+            # endregion
+
+        # Mouse up
+        elif event.type == pg.MOUSEBUTTONUP:
+            # region Drawing input flag and rect and fill draw feature
+            if event.button == 1:
+                is_lmb_pressed = False
+
+                # region Rect add fill
+                if is_shift_pressed and not is_menu:
+                    # region Turn xs into tu
+                    tl_xs = top_left[0]
+                    tl_xds = tl_xs + CAM_RECT.x
+                    tl_xd_tu = tl_xds // TILE_S
+                    # Remove room offset to be collision index
+                    tl_x_tu = tl_xd_tu - ROOM_X_TU
+
+                    tl_ys = top_left[1]
+                    tl_yds = tl_ys + CAM_RECT.y
+                    tl_yd_tu = tl_yds // TILE_S
+                    # Remove room offset to be collision index
+                    tl_y_tu = tl_yd_tu - ROOM_Y_TU
+
+                    tr_xs = top_right[0]
+                    tr_xds = tr_xs + CAM_RECT.x
+                    tr_xd_tu = tr_xds // TILE_S
+                    # Remove room offset to be collision index
+                    tr_x_tu = tr_xd_tu - ROOM_X_TU
+
+                    tr_ys = top_right[1]
+                    tr_yds = tr_ys + CAM_RECT.y
+                    tr_yd_tu = tr_yds // TILE_S
+                    # Remove room offset to be collision index
+                    tr_y_tu = tr_yd_tu - ROOM_Y_TU
+
+                    bl_xs = bottom_left[0]
+                    bl_xds = bl_xs + CAM_RECT.x
+                    bl_xd_tu = bl_xds // TILE_S
+                    # Remove room offset to be collision index
+                    bl_x_tu = bl_xd_tu - ROOM_X_TU
+
+                    bl_ys = bottom_left[1]
+                    bl_yds = bl_ys + CAM_RECT.y
+                    bl_yd_tu = bl_yds // TILE_S
+                    # Remove room offset to be collision index
+                    bl_y_tu = bl_yd_tu - ROOM_Y_TU
+
+                    br_xs = bottom_right[0]
+                    br_xds = br_xs + CAM_RECT.x
+                    br_xd_tu = br_xds // TILE_S
+                    # Remove room offset to be collision index
+                    br_x_tu = br_xd_tu - ROOM_X_TU
+
+                    br_ys = bottom_right[1]
+                    br_yds = br_ys + CAM_RECT.y
+                    br_yd_tu = br_yds // TILE_S
+                    # Remove room offset to be collision index
+                    br_y_tu = br_yd_tu - ROOM_Y_TU
+                    # endregion
+
+                    # region collect corner positions - tl_tu and so on
+                    tl_tu = (tl_x_tu, tl_y_tu)
+                    tr_tu = (tr_x_tu, tr_y_tu)
+                    bl_tu = (bl_x_tu, bl_y_tu)
+                    br_tu = (br_x_tu, br_y_tu)
+                    # endregion
+
+                    # region corner positions -> list of all positions inside the corners
+                    min_x = min(tl_tu[0], tr_tu[0], bl_tu[0], br_tu[0])
+                    max_x = max(tl_tu[0], tr_tu[0], bl_tu[0], br_tu[0])
+                    min_y = min(tl_tu[1], tr_tu[1], bl_tu[1], br_tu[1])
+                    max_y = max(tl_tu[1], tr_tu[1], bl_tu[1], br_tu[1])
+                    filled_points = []
+                    for y in range(min_y, max_y + 1):
+                        for x in range(min_x, max_x + 1):
+                            if (x <= tr_tu[0] and x > tl_tu[0]) and (y >= tl_tu[1] and y < bl_tu[1]):
+                                filled_points.append((x, y))
+                    # endregion
+
+                    # region iterate over all points, and instance like normal drawing state
+                    is_all_items_sprite = True
+                    is_outside = True
+                    for point in filled_points:
+                        x_tu = point[0] - 1
+                        y_tu = point[1]
+                        xd_tu = x_tu + ROOM_X_TU
+                        yd_tu = y_tu + ROOM_Y_TU
+                        xds = xd_tu * TILE_S
+                        yds = yd_tu * TILE_S
+                        item = selected_layer[y_tu * ROOM_W_TU + x_tu]
+                        if item == 0:
+                            is_all_items_sprite = False
+                            # Check if sprite right side and bottom side does not overshoot room rect
+                            r = xds + selected_sprite.region[2]
+                            b = yds + selected_sprite.region[3]
+                            if not r > ROOM_RECT.right and not b > ROOM_RECT.bottom:
+                                is_outside = False
+                                new_sprite = selected_sprite.duplicate()
+                                new_sprite.xds = xds
+                                new_sprite.yds = yds
+                                selected_layer[y_tu *
+                                               ROOM_W_TU + x_tu] = new_sprite
+                                if new_sprite.name in BITMASK_TYPE_SPRITE_NAMES:
+                                    update_bitmasks(x_tu, y_tu, xds, yds)
+                                else:
+                                    xs = xds - CAM_RECT.x
+                                    ys = yds - CAM_RECT.y
+                                    NATIVE_SURF.blit(
+                                        LIGHT_SURF, (xs, ys), (0, 0, new_sprite.region[2], new_sprite.region[3]))
+                    if not is_all_items_sprite and not is_outside:
+                        TALK_SFX.play()
+                    # endregion
+                # endregion
+
+            elif event.button == 2:
+                is_mmb_pressed = False
+
+                # region Fill input
+                if not is_menu:
+                    item = selected_layer[y_tu * ROOM_W_TU + x_tu]
                     if item == 0:
-                        selected_room[y * NATIVE_W_TILE_UNIT + x] = {"pos": (
-                            draw_pos_x, draw_pos_y), "region": selected_region, "name": selected_name}
-                        fill((x, y), (draw_pos_x, draw_pos_y))
+                        # Check if sprite right side and bottom side does not overshoot room rect
+                        r = xds + selected_sprite.region[2]
+                        b = yds + selected_sprite.region[3]
+                        if not r > ROOM_RECT.right and not b > ROOM_RECT.bottom:
+                            new_sprite = selected_sprite.duplicate()
+                            new_sprite.xds = xds
+                            new_sprite.yds = yds
+                            selected_layer[y_tu *
+                                           ROOM_W_TU + x_tu] = new_sprite
+                            TALK_SFX.play()
+                            bucket_fill(x_tu, y_tu, xds, yds)
+                            if new_sprite.name in BITMASK_TYPE_SPRITE_NAMES:
+                                update_bitmasks(x_tu, y_tu, xds, yds)
+                # endregion
 
-        # Move camera
-        cam_dir.x = is_d_pressed - is_a_pressed
-        cam_dir.y = is_s_pressed - is_w_pressed
-        if cam_dir.length_squared() > 0:
-            cam_dir.normalize_ip()
-        cam_vel = cam_vel.lerp(cam_dir * CAM_SPD, CAM_LERP_FACTOR)
-        cam_vel.x = 0 if abs(cam_vel.x) < 0.001 else cam_vel.x
-        cam_vel.y = 0 if abs(cam_vel.y) < 0.001 else cam_vel.y
-        CAM_RECT.x += cam_vel.x * dt
-        CAM_RECT.y += cam_vel.y * dt
+            elif event.button == 3:
+                is_rmb_pressed = False
+                if not is_menu:
+                    pg.mouse.set_cursor(ADD_CURSOR)
 
-    # Draw fps
-    FONT.render_to(
-        NATIVE_SURF, (FONT_W, FONT_H), f"FPS: {CLOCK.get_fps()}", "grey100"
-    )
+                # region Rect del fill
+                if is_shift_pressed and not is_menu:
+                    # region Turn xs into tu
+                    tl_xs = top_left[0]
+                    tl_xds = tl_xs + CAM_RECT.x
+                    tl_xd_tu = tl_xds // TILE_S
+                    # Remove room offset to be collision index
+                    tl_x_tu = tl_xd_tu - ROOM_X_TU
 
-    # Native to window
+                    tl_ys = top_left[1]
+                    tl_yds = tl_ys + CAM_RECT.y
+                    tl_yd_tu = tl_yds // TILE_S
+                    # Remove room offset to be collision index
+                    tl_y_tu = tl_yd_tu - ROOM_Y_TU
+
+                    tr_xs = top_right[0]
+                    tr_xds = tr_xs + CAM_RECT.x
+                    tr_xd_tu = tr_xds // TILE_S
+                    # Remove room offset to be collision index
+                    tr_x_tu = tr_xd_tu - ROOM_X_TU
+
+                    tr_ys = top_right[1]
+                    tr_yds = tr_ys + CAM_RECT.y
+                    tr_yd_tu = tr_yds // TILE_S
+                    # Remove room offset to be collision index
+                    tr_y_tu = tr_yd_tu - ROOM_Y_TU
+
+                    bl_xs = bottom_left[0]
+                    bl_xds = bl_xs + CAM_RECT.x
+                    bl_xd_tu = bl_xds // TILE_S
+                    # Remove room offset to be collision index
+                    bl_x_tu = bl_xd_tu - ROOM_X_TU
+
+                    bl_ys = bottom_left[1]
+                    bl_yds = bl_ys + CAM_RECT.y
+                    bl_yd_tu = bl_yds // TILE_S
+                    # Remove room offset to be collision index
+                    bl_y_tu = bl_yd_tu - ROOM_Y_TU
+
+                    br_xs = bottom_right[0]
+                    br_xds = br_xs + CAM_RECT.x
+                    br_xd_tu = br_xds // TILE_S
+                    # Remove room offset to be collision index
+                    br_x_tu = br_xd_tu - ROOM_X_TU
+
+                    br_ys = bottom_right[1]
+                    br_yds = br_ys + CAM_RECT.y
+                    br_yd_tu = br_yds // TILE_S
+                    # Remove room offset to be collision index
+                    br_y_tu = br_yd_tu - ROOM_Y_TU
+                    # endregion
+
+                    # region collect corner positions
+                    tl_tu = (tl_x_tu, tl_y_tu)
+                    tr_tu = (tr_x_tu, tr_y_tu)
+                    bl_tu = (bl_x_tu, bl_y_tu)
+                    br_tu = (br_x_tu, br_y_tu)
+                    # endregion
+
+                    # region corner positions -> list of all positions inside the corners
+                    min_x = min(tl_tu[0], tr_tu[0], bl_tu[0], br_tu[0])
+                    max_x = max(tl_tu[0], tr_tu[0], bl_tu[0], br_tu[0])
+                    min_y = min(tl_tu[1], tr_tu[1], bl_tu[1], br_tu[1])
+                    max_y = max(tl_tu[1], tr_tu[1], bl_tu[1], br_tu[1])
+                    filled_points = []
+                    for y in range(min_y, max_y + 1):
+                        for x in range(min_x, max_x + 1):
+                            if (x <= tr_tu[0] and x > tl_tu[0]) and (y >= tl_tu[1] and y < bl_tu[1]):
+                                filled_points.append((x, y))
+                    # endregion
+
+                    # region iterate over all points, and instance like normal drawing state
+                    is_all_items_zero = True
+                    for point in filled_points:
+                        x_tu = point[0] - 1
+                        y_tu = point[1]
+                        xd_tu = x_tu + ROOM_X_TU
+                        yd_tu = y_tu + ROOM_Y_TU
+                        xds = xd_tu * TILE_S
+                        yds = yd_tu * TILE_S
+                        item = selected_layer[y_tu * ROOM_W_TU + x_tu]
+                        if item != 0:
+                            is_all_items_zero = False
+                            selected_layer[y_tu * ROOM_W_TU + x_tu] = 0
+                            if new_sprite.name in BITMASK_TYPE_SPRITE_NAMES:
+                                update_bitmasks(x_tu, y_tu, xds, yds)
+                            else:
+                                xs = xds - CAM_RECT.x
+                                ys = yds - CAM_RECT.y
+                                NATIVE_SURF.blit(
+                                    LIGHT_SURF, (xs, ys), (0, 0, item.region[2], item.region[3]))
+                    if not is_all_items_zero:
+                        TALK_SFX.play()
+                    # endregion
+                # endregion
+            # endregion
+
+            # region Select menu item
+            if is_menu:
+                pos = pg.mouse.get_pos()
+                x = pos[0] // RESOLUTION
+                y = pos[1] // RESOLUTION
+                x_tu = x // TILE_S
+                y_tu = y // TILE_S
+                xs = x_tu * TILE_S
+                ys = y_tu * TILE_S
+                cell = MENU_COLLISIONS[y_tu * NATIVE_W_TU + x_tu]
+                if cell != 0:
+                    selected_sprite = cell
+                    selected_layer = LAYERS_LIST[selected_sprite.layer_i]
+                    is_menu = False
+                    TALK_SFX.play()
+                    NATIVE_SURF.blit(LIGHT_SURF, (0, 0))
+            # endregion
+
+    # # region Debug draw
+    # FONT.render_to(NATIVE_SURF, (FONT_W, 3 * FONT_H),
+    #                f"fps: {CLOCK.get_fps()}", "grey100")
+    # FONT.render_to(NATIVE_SURF, (FONT_W, 5 * FONT_H),
+    #                f"sprite: {selected_sprite}", "grey100")
+    # endregion
+
+    # region Native to window and update window
     pg.transform.scale(NATIVE_SURF, (WINDOW_W, WINDOW_H), WINDOW_SURF)
-
-    # Update window
     pg.display.update()
+    # endregion
