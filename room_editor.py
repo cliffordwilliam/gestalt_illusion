@@ -5,34 +5,27 @@ from sys import exit
 pg.init()
 
 # region Room editor settings
-# TODO: come up with a way to select different sprite sheets, like a drop down options or something
 SPRITE_SHEET_PNG_NAME = "stage_1_sprite_sheet.png"
 ROOM_X_RU = int(input("Enter ROOM_X_RU: "))
 ROOM_Y_RU = int(input("Enter ROOM_Y_RU: "))
 ROOM_SCALE_X = int(input("Enter ROOM_SCALE_X: "))
 ROOM_SCALE_Y = int(input("Enter ROOM_SCALE_Y: "))
-# TODO: with selected sprite sheet, also set the total layers here, so bind the 2 data
 TOTAL_LAYERS = 15
-# These always stay the same for my game but in case other people wants to edit I leave it here
 TILE_S = 16
 RESOLUTION = 3
-# TODO: Also bind this with selected sprite sheet
 BITMASK_TYPE_SPRITE_NAMES = [
-    "Floor", "Rock", "BgRock", "Pillar", "Balcony", "Rail", "BalconySupport", "WallFence", "BigWindow", "WallWindow"
+    "Floor", "Rock", "BgRock", "Pillar", "Balcony", "Rail", "BalconySupport", "WallFence", "BigWindow", "WallWindow", "Window", "VPillar", "HPillar"
 ]
 # endregion
 
 # region Sprites settings
-SPRITES = []
-
-
-class Floor:
-    def __init__(self):
-        self.name = "Floor"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 13
-        self.regions = {
+SPRITES = [
+    {
+        "name": "Floor",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 13,
+        "regions": {
             208: (320, 0, 16, 16),
             248: (336, 0, 16, 16),
             104: (352, 0, 16, 16),
@@ -84,29 +77,15 @@ class Floor:
             222: (416, 64, 16, 16),
             74: (432, 64, 16, 16),
             90: (448, 64, 16, 16),
-        }
-        self.region = self.regions[0]
-        self.icon_region = (368, 48, 16, 16)
-
-    def duplicate(self):
-        return Floor()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(Floor())
-
-
-class Rock:
-    def __init__(self):
-        self.name = "Rock"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 13
-        self.regions = {
+        },
+        "region": (368, 48, 16, 16)
+    },
+    {
+        "name": "Rock",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 13,
+        "regions": {
             208: (320, 80, 16, 16),
             248: (336, 80, 16, 16),
             104: (352, 80, 16, 16),
@@ -158,29 +137,15 @@ class Rock:
             222: (416, 144, 16, 16),
             74: (432, 144, 16, 16),
             90: (448, 144, 16, 16),
-        }
-        self.region = self.regions[0]
-        self.icon_region = (368, 128, 16, 16)
-
-    def duplicate(self):
-        return Rock()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(Rock())
-
-
-class BgRock:
-    def __init__(self):
-        self.name = "BgRock"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 0
-        self.regions = {
+        },
+        "region": (368, 128, 16, 16)
+    },
+    {
+        "name": "BgRock",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 0,
+        "regions": {
             208: (320, 160, 16, 16),
             248: (336, 160, 16, 16),
             104: (352, 160, 16, 16),
@@ -232,113 +197,96 @@ class BgRock:
             222: (416, 224, 16, 16),
             74: (432, 224, 16, 16),
             90: (448, 224, 16, 16),
-        }
-        self.region = self.regions[0]
-        self.icon_region = (368, 208, 16, 16)
+        },
+        "region": (368, 208, 16, 16)
+    },
+    {
+        "name": "TallBush",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 1,
+        "region": (320, 240, 176, 32)
+    },
+    {
+        "name": "ShortBush",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 2,
+        "region": (320, 272, 112, 32)
+    },
+    {
+        "name": "Boulder",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 3,
+        "region": (432, 272, 48, 32)
+    },
+    {
+        "name": "VPillar",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 5,
+        "regions": {
+            208: 0,
+            248: 0,
+            104: 0,
+            64: 0,
+            80: 0,
+            120: 0,
+            216: 0,
+            72: 0,
+            88: 0,
+            219: 0,
 
-    def duplicate(self):
-        return BgRock()
+            214: 0,
+            255: 0,
+            107: 0,
+            66: 0,
+            86: 0,
+            127: 0,
+            223: 0,
+            75: 0,
+            95: 0,
+            126: 0,
 
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
+            22: 0,
+            31: 0,
+            11: 0,
+            2: 0,
+            210: 0,
+            251: 0,
+            254: 0,
+            106: 0,
+            250: 0,
+            218: 0,
+            122: 0,
 
+            16: (320, 304, 16, 16),
+            24: 0,
+            8: (336, 304, 16, 16),
+            0: 0,
+            18: 0,
+            27: 0,
+            30: 0,
+            10: 0,
+            26: 0,
+            94: 0,
+            91: 0,
 
-SPRITES.append(BgRock())
-
-
-class TallBush:
-    def __init__(self):
-        self.name = "TallBush"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 1
-        self.region = (320, 240, 176, 32)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return TallBush()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(TallBush())
-
-
-class ShortBush:
-    def __init__(self):
-        self.name = "ShortBush"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 2
-        self.region = (320, 272, 112, 32)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return ShortBush()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(ShortBush())
-
-
-class Boulder:
-    def __init__(self):
-        self.name = "Boulder"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 3
-        self.region = (432, 272, 48, 32)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return Boulder()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(Boulder())
-
-
-class VPillar:
-    def __init__(self):
-        self.name = "VPillar"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 5
-        self.region = (320, 304, 32, 16)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return VPillar()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(VPillar())
-
-
-class Pillar:
-    def __init__(self):
-        self.name = "Pillar"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 5
-        self.regions = {
+            82: 0,
+            123: 0,
+            222: 0,
+            74: 0,
+            90: 0,
+        },
+        "region": (320, 304, 16, 16)
+    },
+    {
+        "name": "Pillar",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 5,
+        "regions": {
             208: 0,
             248: 0,
             104: 0,
@@ -390,386 +338,247 @@ class Pillar:
             222: 0,
             74: 0,
             90: 0,
-        }
-        self.region = self.regions[64]
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return Pillar()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(Pillar())
-
-
-class BrokenWall:
-    def __init__(self):
-        self.name = "BrokenWall"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 5
-        self.region = (336, 320, 16, 16)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return BrokenWall()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(BrokenWall())
-
-
-class Wall:
-    def __init__(self):
-        self.name = "Wall"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 5
-        self.region = (336, 336, 16, 16)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return Wall()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(Wall())
-
-
-class SmallTree:
-    def __init__(self):
-        self.name = "SmallTree"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 4
-        self.region = (352, 304, 48, 64)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return SmallTree()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(SmallTree())
-
-
-class SmallerTree:
-    def __init__(self):
-        self.name = "SmallerTree"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 4
-        self.region = (400, 320, 32, 48)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return SmallerTree()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(SmallerTree())
-
-
-class BigPillarTop:
-    def __init__(self):
-        self.name = "BigPillarTop"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 6
-        self.region = (432, 304, 32, 32)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return BigPillarTop()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(BigPillarTop())
-
-
-class BigPillarMid:
-    def __init__(self):
-        self.name = "BigPillarMid"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 6
-        self.region = (432, 336, 32, 16)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return BigPillarMid()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(BigPillarMid())
-
-
-class BigPillarBot:
-    def __init__(self):
-        self.name = "BigPillarBot"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 6
-        self.region = (432, 352, 32, 16)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return BigPillarBot()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(BigPillarBot())
-
-
-class ThinTop:
-    def __init__(self):
-        self.name = "ThinTop"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 11
-        self.region = (464, 304, 32, 48)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return ThinTop()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(ThinTop())
-
-
-class ThinMid:
-    def __init__(self):
-        self.name = "ThinMid"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 11
-        self.region = (432, 416, 32, 16)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return ThinMid()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(ThinMid())
-
-
-class ThinBot:
-    def __init__(self):
-        self.name = "ThinBot"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 11
-        self.region = (464, 352, 32, 16)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return ThinBot()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(ThinBot())
-
-
-class Window:
-    def __init__(self):
-        self.name = "Window"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 5
-        self.region = (432, 368, 32, 32)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return Window()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(Window())
-
-
-class Furnace:
-    def __init__(self):
-        self.name = "Furnace"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 8
-        self.region = (464, 368, 32, 32)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return Furnace()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(Furnace())
-
-
-class Scone:
-    def __init__(self):
-        self.name = "Scone"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 10
-        self.region = (400, 368, 16, 32)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return Scone()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(Scone())
-
-
-class ThinScone:
-    def __init__(self):
-        self.name = "ThinScone"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 10
-        self.region = (416, 368, 16, 32)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return ThinScone()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(ThinScone())
-
-
-class Furniture:
-    def __init__(self):
-        self.name = "Furniture"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 9
-        self.region = (400, 432, 64, 32)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return Furniture()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(Furniture())
-
-
-class HPillar:
-    def __init__(self):
-        self.name = "HPillar"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 5
-        self.region = (464, 432, 16, 32)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return HPillar()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(HPillar())
-
-
-class Gate:
-    def __init__(self):
-        self.name = "Gate"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 5
-        self.region = (384, 432, 16, 16)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return Gate()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(Gate())
-
-
-class Balcony:
-    def __init__(self):
-        self.name = "Balcony"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 11
-        self.regions = {
+        },
+        "region": (320, 320, 16, 16)
+    },
+    {
+        "name": "BrokenWall",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 5,
+        "region": (336, 320, 16, 16)
+    },
+    {
+        "name": "Wall",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 5,
+        "region": (336, 336, 16, 16)
+    },
+    {
+        "name": "SmallTree",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 4,
+        "region": (352, 304, 48, 64)
+    },
+    {
+        "name": "SmallerTree",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 4,
+        "region": (400, 320, 32, 48)
+    },
+    {
+        "name": "SmallerTree",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 4,
+        "region": (400, 320, 32, 48)
+    },
+    {
+        "name": "BigPillarTop",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 6,
+        "region": (432, 304, 32, 32)
+    },
+    {
+        "name": "BigPillarMid",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 6,
+        "region": (432, 336, 32, 16)
+    },
+    {
+        "name": "BigPillarBot",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 6,
+        "region": (432, 352, 32, 16)
+    },
+    {
+        "name": "ThinTop",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 11,
+        "region": (464, 304, 32, 48)
+    },
+    {
+        "name": "ThinMid",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 11,
+        "region": (432, 416, 32, 16)
+    },
+    {
+        "name": "ThinBot",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 11,
+        "region": (464, 352, 32, 16)
+    },
+    {
+        "name": "Window",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 5,
+        "regions": {
+            208: (432, 368, 16, 16),
+            248: 0,
+            104: (448, 368, 16, 16),
+            64: 0,
+            80: 0,
+            120: 0,
+            216: 0,
+            72: 0,
+            88: 0,
+            219: 0,
+
+            214: 0,
+            255: 0,
+            107: 0,
+            66: 0,
+            86: 0,
+            127: 0,
+            223: 0,
+            75: 0,
+            95: 0,
+            126: 0,
+
+            22: (432, 384, 16, 16),
+            31: 0,
+            11: (448, 384, 16, 16),
+            2: 0,
+            210: 0,
+            251: 0,
+            254: 0,
+            106: 0,
+            250: 0,
+            218: 0,
+            122: 0,
+
+            16: 0,
+            24: 0,
+            8: 0,
+            0: 0,
+            18: 0,
+            27: 0,
+            30: 0,
+            10: 0,
+            26: 0,
+            94: 0,
+            91: 0,
+
+            82: 0,
+            123: 0,
+            222: 0,
+            74: 0,
+            90: 0,
+        },
+        "region": (432, 368, 16, 16)
+    },
+    {
+        "name": "Furnace",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 8,
+        "region": (464, 368, 32, 32)
+    },
+    {
+        "name": "Scone",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 10,
+        "region": (400, 368, 16, 32)
+    },
+    {
+        "name": "ThinScone",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 10,
+        "region": (416, 368, 16, 32)
+    },
+    {
+        "name": "Furniture",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 9,
+        "region": (400, 432, 64, 32)
+    },
+    {
+        "name": "HPillar",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 5,
+        "regions": {
+            208: 0,
+            248: 0,
+            104: 0,
+            64: (464, 432, 16, 16),
+            80: 0,
+            120: 0,
+            216: 0,
+            72: 0,
+            88: 0,
+            219: 0,
+
+            214: 0,
+            255: 0,
+            107: 0,
+            66: 0,
+            86: 0,
+            127: 0,
+            223: 0,
+            75: 0,
+            95: 0,
+            126: 0,
+
+            22: 0,
+            31: 0,
+            11: 0,
+            2: (464, 448, 16, 16),
+            210: 0,
+            251: 0,
+            254: 0,
+            106: 0,
+            250: 0,
+            218: 0,
+            122: 0,
+
+            16: 0,
+            24: 0,
+            8: 0,
+            0: 0,
+            18: 0,
+            27: 0,
+            30: 0,
+            10: 0,
+            26: 0,
+            94: 0,
+            91: 0,
+
+            82: 0,
+            123: 0,
+            222: 0,
+            74: 0,
+            90: 0,
+        },
+        "region": (464, 432, 16, 16)
+    },
+    {
+        "name": "Gate",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 5,
+        "region": (384, 432, 16, 16)
+    },
+    {
+        "name": "Balcony",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 11,
+        "regions": {
             208: 0,
             248: 0,
             104: 0,
@@ -821,29 +630,15 @@ class Balcony:
             222: 0,
             74: 0,
             90: 0,
-        }
-        self.region = self.regions[16]
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return Balcony()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(Balcony())
-
-
-class Rail:
-    def __init__(self):
-        self.name = "Rail"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 12
-        self.regions = {
+        },
+        "region": (320, 384, 16, 16)
+    },
+    {
+        "name": "Rail",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 12,
+        "regions": {
             208: 0,
             248: 0,
             104: 0,
@@ -895,30 +690,15 @@ class Rail:
             222: 0,
             74: 0,
             90: 0,
-        }
-        self.region = self.regions[16]
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return Rail()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(Rail())
-
-
-class BalconySupport:
-    def __init__(self):
-        self.name = "BalconySupport"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 11
-
-        self.regions = {
+        },
+        "region": (320, 368, 16, 16)
+    },
+    {
+        "name": "BalconySupport",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 11,
+        "regions": {
             208: 0,
             248: 0,
             104: 0,
@@ -970,50 +750,22 @@ class BalconySupport:
             222: 0,
             74: 0,
             90: 0,
-        }
-        self.region = self.regions[64]
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return BalconySupport()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(BalconySupport())
-
-
-class Grass:
-    def __init__(self):
-        self.name = "Grass"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 14
-        self.region = (368, 368, 32, 32)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return Grass()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(Grass())
-
-
-class WallFence:
-    def __init__(self):
-        self.name = "WallFence"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 5
-        self.regions = {
+        },
+        "region": (320, 400, 16, 16)
+    },
+    {
+        "name": "Grass",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 14,
+        "region": (368, 368, 32, 32)
+    },
+    {
+        "name": "WallFence",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 5,
+        "regions": {
             208: 0,
             248: 0,
             104: 0,
@@ -1065,29 +817,15 @@ class WallFence:
             222: 0,
             74: 0,
             90: 0,
-        }
-        self.region = self.regions[16]
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return WallFence()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(WallFence())
-
-
-class Fire:
-    def __init__(self):
-        self.name = "Fire"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 10
-        self.regions = [
+        },
+        "region": (336, 432, 16, 16)
+    },
+    {
+        "name": "Fire",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 10,
+        "regions": [
             (336, 400, 16, 16),
             (352, 400, 16, 16),
             (368, 400, 16, 16),
@@ -1104,38 +842,15 @@ class Fire:
             (384, 416, 16, 16),
             (400, 416, 16, 16),
             (416, 416, 16, 16),
-        ]
-        self.region = self.regions[0]
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-        self.total_dt = 0
-        self.frame = 0
-        self.regions_len = len(self.regions)
-
-    def duplicate(self):
-        return Fire()
-
-    def update(self, dt):
-        self.total_dt += dt
-        if self.total_dt > 50:
-            self.total_dt = 0
-            self.frame += 1
-            if self.frame == self.regions_len:
-                self.frame = 0
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.regions[self.frame])
-
-
-SPRITES.append(Fire())
-
-
-class BigWindow:
-    def __init__(self):
-        self.name = "BigWindow"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 5
-        self.regions = {
+        ],
+        "region": (336, 400, 16, 16)
+    },
+    {
+        "name": "BigWindow",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 5,
+        "regions": {
             208: (400, 464, 16, 16),
             248: (416, 464, 16, 16),
             104: (432, 464, 16, 16),
@@ -1187,52 +902,22 @@ class BigWindow:
             222: 0,
             74: 0,
             90: 0,
-        }
-        self.region = self.regions[255]
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return BigWindow()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(BigWindow())
-
-
-class BigWindowLamp:
-    def __init__(self):
-        self.name = "BigWindowLamp"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 5
-        self.region = (416, 480, 16, 16)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return BigWindowLamp()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(BigWindowLamp())
-
-# PPPP
-
-
-class WallWindow:
-    def __init__(self):
-        self.name = "WallWindow"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 5
-        self.regions = {
+        },
+        "region": (416, 496, 16, 16)
+    },
+    {
+        "name": "BigWindowLamp",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 5,
+        "region": (416, 480, 16, 16)
+    },
+    {
+        "name": "WallWindow",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 5,
+        "regions": {
             208: (448, 464, 16, 16),
             248: (464, 464, 16, 16),
             104: (480, 464, 16, 16),
@@ -1284,105 +969,38 @@ class WallWindow:
             222: 0,
             74: 0,
             90: 0,
-        }
-        self.region = self.regions[255]
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return WallWindow()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(WallWindow())
-
-
-class WallWindowLamp:
-    def __init__(self):
-        self.name = "WallWindowLamp"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 5
-        self.region = (464, 480, 16, 16)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return WallWindowLamp()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(WallWindowLamp())
-
-
-class Door:
-    def __init__(self):
-        self.name = "Door"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 5
-        self.region = (400, 512, 32, 64)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return Door()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(Door())
-
-
-class CurtainLeft:
-    def __init__(self):
-        self.name = "CurtainLeft"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 7
-        self.region = (432, 512, 32, 80)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return CurtainLeft()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(CurtainLeft())
-
-
-class CurtainRight:
-    def __init__(self):
-        self.name = "CurtainRight"
-        self.xds = 0
-        self.yds = 0
-        self.layer_i = 7
-        self.region = (464, 512, 32, 80)
-        self.icon_region = (self.region[0], self.region[1], 16, 16)
-
-    def duplicate(self):
-        return CurtainRight()
-
-    def update(self, dt):
-        xd = self.xds - CAM_RECT.x
-        yd = self.yds - CAM_RECT.y
-        NATIVE_SURF.blit(SPRITE_SHEET_SURF, (xd, yd), self.region)
-
-
-SPRITES.append(CurtainRight())
-
+        },
+        "region": (464, 496, 16, 16)
+    },
+    {
+        "name": "WallWindowLamp",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 5,
+        "region": (464, 480, 16, 16)
+    },
+    {
+        "name": "Door",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 5,
+        "region": (400, 512, 32, 64)
+    },
+    {
+        "name": "CurtainLeft",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 7,
+        "region": (432, 512, 32, 80)
+    },
+    {
+        "name": "CurtainRight",
+        "xds": 0,
+        "yds": 0,
+        "layer_i": 7,
+        "region": (464, 512, 32, 80)
+    },
+]
 SPRITES_LEN = len(SPRITES)
 # endregion
 
@@ -1427,7 +1045,8 @@ for i in range(SPRITES_LEN):
     x = x_tu * TILE_S
     y = y_tu * TILE_S
     MENU_COLLISIONS[i] = sprite
-    MENU_SURF.blit(SPRITE_SHEET_SURF, (x, y), (sprite.icon_region))
+    REGION = sprite["region"]
+    MENU_SURF.blit(SPRITE_SHEET_SURF, (x, y), (REGION[0], REGION[1], 16, 16))
     for i in range(NATIVE_W_TU + 1):
         v = TILE_S * i
         pg.draw.line(MENU_SURF, "grey4", (v, 0), (v, NATIVE_H))
@@ -1444,7 +1063,7 @@ pg.mouse.set_cursor(ADD_CURSOR)
 # Keep track what state, the selected sprite and selected layer
 is_menu = False
 selected_sprite = MENU_COLLISIONS[0]
-selected_layer = LAYERS_LIST[selected_sprite.layer_i]
+selected_layer = LAYERS_LIST[selected_sprite["layer_i"]]
 # endregion
 
 # region Rect draw vars
@@ -1487,12 +1106,14 @@ def update_bitmasks(x_tu, y_tu, xds, yds, last=False):
         (x_tu - 1, y_tu - 0),                       (x_tu + 1, y_tu - 0),
         (x_tu - 1, y_tu + 1), (x_tu - 0, y_tu + 1), (x_tu + 1, y_tu + 1)
     ]
-    if selected_sprite.name in ["Pillar", "BalconySupport"]:
+    # Top and bottom checks only
+    if selected_sprite["name"] in ["Pillar", "BalconySupport", "HPillar"]:
         neighbour_pos_tu = [
             (x_tu - 0, y_tu - 1),
             (x_tu - 0, y_tu + 1),
         ]
-    elif selected_sprite.name in ["Balcony", "Rail", "WallFence"]:
+    # Left and right checks only
+    elif selected_sprite["name"] in ["Balcony", "Rail", "WallFence", "VPillar"]:
         neighbour_pos_tu = [
             (x_tu - 1, y_tu - 0), (x_tu + 1, y_tu - 0),
         ]
@@ -1510,16 +1131,16 @@ def update_bitmasks(x_tu, y_tu, xds, yds, last=False):
             if neighbour == 0:
                 continue
 
-            # Windows do not mix
-            if not selected_sprite.name in ["Floor", "Rock", "BgRock"]:
-                if selected_sprite.name != neighbour.name:
+            # Only Floor Rock and BgRock mix in the same layer bitmask
+            if not selected_sprite["name"] in ["Floor", "Rock", "BgRock"]:
+                if selected_sprite["name"] != neighbour["name"]:
                     continue
 
             # Found! Tell my neighbour to update bitmask
             if last == False:
                 update_bitmasks(
                     neighbour_x_tu, neighbour_y_tu,
-                    neighbour.xds, neighbour.yds,
+                    neighbour["xds"], neighbour["yds"],
                     last=True
                 )
 
@@ -1547,11 +1168,10 @@ def update_bitmasks(x_tu, y_tu, xds, yds, last=False):
 
     # In case this tile is from deleted draw, then I cannot update this tile
     if sprite != 0:
-        if sprite.name in ["BigWindowLamp", "WallWindowLamp"]:
-            return
-        new_region = sprite.regions[mask_id]
-        if new_region != 0:
-            sprite.region = new_region
+        if sprite["name"] in BITMASK_TYPE_SPRITE_NAMES:
+            new_region = sprite["regions"][mask_id]
+            if new_region != 0:
+                selected_layer[y_tu * ROOM_W_TU + x_tu]["region"] = new_region
 
 
 def bucket_fill(x_tu, y_tu, xds, yds):
@@ -1584,9 +1204,9 @@ def bucket_fill(x_tu, y_tu, xds, yds):
                 neighbour_yds = neighbour_yd_tu * TILE_S
 
                 # Instance new sprite
-                new_sprite = selected_sprite.duplicate()
-                new_sprite.xds = neighbour_xds
-                new_sprite.yds = neighbour_yds
+                new_sprite = selected_sprite.copy()
+                new_sprite["xds"] = neighbour_xds
+                new_sprite["yds"] = neighbour_yds
                 selected_layer[neighbour_y_tu *
                                ROOM_W_TU + neighbour_x_tu] = new_sprite
 
@@ -1597,7 +1217,7 @@ def bucket_fill(x_tu, y_tu, xds, yds):
                 )
 
                 # Update bistmasks if it is bitmask type
-                if new_sprite.name in BITMASK_TYPE_SPRITE_NAMES:
+                if new_sprite["name"] in BITMASK_TYPE_SPRITE_NAMES:
                     update_bitmasks(neighbour_x_tu, neighbour_y_tu,
                                     neighbour_xds, neighbour_yds)
 # endregion
@@ -1679,8 +1299,11 @@ while 1:
             for item in room:
                 if item != 0:
                     # Only update sprites that are in view
-                    if (CAM_RECT.x - item.region[2] <= item.xds < CAM_RECT.right) and (CAM_RECT.y - item.region[3] <= item.yds < CAM_RECT.bottom):
-                        item.update(dt)
+                    if (CAM_RECT.x - item["region"][2] <= item["xds"] < CAM_RECT.right) and (CAM_RECT.y - item["region"][3] <= item["yds"] < CAM_RECT.bottom):
+                        xd = item["xds"] - CAM_RECT.x
+                        yd = item["yds"] - CAM_RECT.y
+                        NATIVE_SURF.blit(SPRITE_SHEET_SURF,
+                                         (xd, yd), item["region"])
         # endregion
 
         # region Draw cursor
@@ -1699,8 +1322,8 @@ while 1:
         # Cursor position global pos
         xs = xds - CAM_RECT.x
         ys = yds - CAM_RECT.y
-        r = xs + selected_sprite.region[2]
-        b = ys + selected_sprite.region[3]
+        r = xs + selected_sprite["region"][2]
+        b = ys + selected_sprite["region"][3]
         if not (is_shift_pressed and is_lmb_pressed) and not (is_shift_pressed and is_rmb_pressed):
             if is_rmb_pressed:
                 pg.draw.lines(NATIVE_SURF, "red", True, [
@@ -1757,17 +1380,17 @@ while 1:
                 item = selected_layer[y_tu * ROOM_W_TU + x_tu]
                 if item == 0:
                     # Check if sprite right side and bottom side does not overshoot room rect
-                    r = xds + selected_sprite.region[2]
-                    b = yds + selected_sprite.region[3]
+                    r = xds + selected_sprite["region"][2]
+                    b = yds + selected_sprite["region"][3]
                     if not r > ROOM_RECT.right and not b > ROOM_RECT.bottom:
-                        new_sprite = selected_sprite.duplicate()
-                        new_sprite.xds = xds
-                        new_sprite.yds = yds
+                        new_sprite = selected_sprite.copy()
+                        new_sprite["xds"] = xds
+                        new_sprite["yds"] = yds
                         selected_layer[y_tu * ROOM_W_TU + x_tu] = new_sprite
                         NATIVE_SURF.blit(LIGHT_SURF, (xs, ys),
-                                         (0, 0, selected_sprite.region[2], selected_sprite.region[3],))
+                                         (0, 0, selected_sprite["region"][2], selected_sprite["region"][3],))
                         TALK_SFX.play()
-                        if new_sprite.name in BITMASK_TYPE_SPRITE_NAMES:
+                        if new_sprite["name"] in BITMASK_TYPE_SPRITE_NAMES:
                             update_bitmasks(x_tu, y_tu, xds, yds)
             # endregion
 
@@ -1777,9 +1400,9 @@ while 1:
                 if item != 0:
                     selected_layer[y_tu * ROOM_W_TU + x_tu] = 0
                     NATIVE_SURF.blit(LIGHT_SURF, (xs, ys),
-                                     (0, 0, selected_sprite.region[2], selected_sprite.region[3],))
+                                     (0, 0, selected_sprite["region"][2], selected_sprite["region"][3],))
                     TALK_SFX.play()
-                    if item.name in BITMASK_TYPE_SPRITE_NAMES:
+                    if item["name"] in BITMASK_TYPE_SPRITE_NAMES:
                         update_bitmasks(x_tu, y_tu, xds, yds)
             # endregion
 
@@ -1845,7 +1468,7 @@ while 1:
                 bottom_right = 0
             # endregion
 
-            # Delete all button
+            # region Delete all button
             if event.key == pg.K_0:
                 is_something_deleted = False
                 for room in LAYERS_LIST:
@@ -1853,13 +1476,14 @@ while 1:
                         item = room[i]
                         if item != 0:
                             is_something_deleted = True
-                            xs = item.xds - CAM_RECT.x
-                            ys = item.yds - CAM_RECT.y
+                            xs = item["xds"] - CAM_RECT.x
+                            ys = item["yds"] - CAM_RECT.y
                             NATIVE_SURF.blit(
                                 LIGHT_SURF, (xs, ys), (0, 0, TILE_S, TILE_S))
                         room[i] = 0
                 if is_something_deleted:
                     TALK_SFX.play()
+            # endregion
 
         # Mouse down
         if event.type == pg.MOUSEBUTTONDOWN:
@@ -1975,22 +1599,22 @@ while 1:
                         if item == 0:
                             is_all_items_sprite = False
                             # Check if sprite right side and bottom side does not overshoot room rect
-                            r = xds + selected_sprite.region[2]
-                            b = yds + selected_sprite.region[3]
+                            r = xds + selected_sprite["region"][2]
+                            b = yds + selected_sprite["region"][3]
                             if not r > ROOM_RECT.right and not b > ROOM_RECT.bottom:
                                 is_outside = False
-                                new_sprite = selected_sprite.duplicate()
-                                new_sprite.xds = xds
-                                new_sprite.yds = yds
+                                new_sprite = selected_sprite.copy()
+                                new_sprite["xds"] = xds
+                                new_sprite["yds"] = yds
                                 selected_layer[y_tu *
                                                ROOM_W_TU + x_tu] = new_sprite
-                                if new_sprite.name in BITMASK_TYPE_SPRITE_NAMES:
+                                if new_sprite["name"] in BITMASK_TYPE_SPRITE_NAMES:
                                     update_bitmasks(x_tu, y_tu, xds, yds)
                                 else:
                                     xs = xds - CAM_RECT.x
                                     ys = yds - CAM_RECT.y
                                     NATIVE_SURF.blit(
-                                        LIGHT_SURF, (xs, ys), (0, 0, new_sprite.region[2], new_sprite.region[3]))
+                                        LIGHT_SURF, (xs, ys), (0, 0, new_sprite["region"][2], new_sprite["region"][3]))
                     if not is_all_items_sprite and not is_outside:
                         TALK_SFX.play()
                     # endregion
@@ -2004,17 +1628,17 @@ while 1:
                     item = selected_layer[y_tu * ROOM_W_TU + x_tu]
                     if item == 0:
                         # Check if sprite right side and bottom side does not overshoot room rect
-                        r = xds + selected_sprite.region[2]
-                        b = yds + selected_sprite.region[3]
+                        r = xds + selected_sprite["region"][2]
+                        b = yds + selected_sprite["region"][3]
                         if not r > ROOM_RECT.right and not b > ROOM_RECT.bottom:
-                            new_sprite = selected_sprite.duplicate()
-                            new_sprite.xds = xds
-                            new_sprite.yds = yds
+                            new_sprite = selected_sprite.copy()
+                            new_sprite["xds"] = xds
+                            new_sprite["yds"] = yds
                             selected_layer[y_tu *
                                            ROOM_W_TU + x_tu] = new_sprite
                             TALK_SFX.play()
                             bucket_fill(x_tu, y_tu, xds, yds)
-                            if new_sprite.name in BITMASK_TYPE_SPRITE_NAMES:
+                            if new_sprite["name"] in BITMASK_TYPE_SPRITE_NAMES:
                                 update_bitmasks(x_tu, y_tu, xds, yds)
                 # endregion
 
@@ -2107,13 +1731,13 @@ while 1:
                         if item != 0:
                             is_all_items_zero = False
                             selected_layer[y_tu * ROOM_W_TU + x_tu] = 0
-                            if new_sprite.name in BITMASK_TYPE_SPRITE_NAMES:
+                            if item["name"] in BITMASK_TYPE_SPRITE_NAMES:
                                 update_bitmasks(x_tu, y_tu, xds, yds)
                             else:
                                 xs = xds - CAM_RECT.x
                                 ys = yds - CAM_RECT.y
                                 NATIVE_SURF.blit(
-                                    LIGHT_SURF, (xs, ys), (0, 0, item.region[2], item.region[3]))
+                                    LIGHT_SURF, (xs, ys), (0, 0, item["region"][2], item["region"][3]))
                     if not is_all_items_zero:
                         TALK_SFX.play()
                     # endregion
@@ -2132,7 +1756,7 @@ while 1:
                 cell = MENU_COLLISIONS[y_tu * NATIVE_W_TU + x_tu]
                 if cell != 0:
                     selected_sprite = cell
-                    selected_layer = LAYERS_LIST[selected_sprite.layer_i]
+                    selected_layer = LAYERS_LIST[selected_sprite["layer_i"]]
                     is_menu = False
                     TALK_SFX.play()
                     NATIVE_SURF.blit(LIGHT_SURF, (0, 0))
@@ -2142,7 +1766,7 @@ while 1:
     FONT.render_to(NATIVE_SURF, (FONT_W, 32 * FONT_H),
                    f"fps: {int(CLOCK.get_fps())}", "grey100", "black")
     FONT.render_to(NATIVE_SURF, (FONT_W, 34 * FONT_H),
-                   f"sprite: {selected_sprite.name}", "grey100", "black")
+                   f"sprite: {selected_sprite["name"]}", "grey100", "black")
     # endregion
 
     # region Native to window and update window
