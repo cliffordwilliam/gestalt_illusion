@@ -150,7 +150,6 @@ while 1:
     pressed = pg.key.get_pressed()
     direction_x = pressed[pg.K_d] - pressed[pg.K_a]
     direction_y = pressed[pg.K_s] - pressed[pg.K_w]
-    PLAYER_RECT.clamp_ip(CAM_RECT)
     PLAYER_FUTURE_RECT.center = PLAYER_RECT.center
     x_tu = PLAYER_RECT.centerx // tile_s
     y_tu = PLAYER_RECT.centery // tile_s
@@ -169,28 +168,20 @@ while 1:
     direction_to_locations_tu = {
         # No movement
         (0, 0): [],
-
         # Up
         (0, -1): [player_tl_tu, player_tt_tu, player_tr_tu],
-
         # Up-Right
         (1, -1): [player_tl_tu, player_tt_tu, player_tr_tu, player_mr_tu, player_br_tu],
-
         # Right
         (1, 0): [player_tr_tu, player_mr_tu, player_br_tu],
-
         # Down-Right
         (1, 1): [player_bl_tu, player_bm_tu, player_br_tu, player_mr_tu, player_tr_tu],
-
         # Down
         (0, 1): [player_bl_tu, player_bm_tu, player_br_tu],
-
         # Down-Left
         (-1, 1): [player_tl_tu, player_ml_tu, player_bl_tu, player_bm_tu, player_br_tu],
-
         # Left
         (-1, 0): [player_tl_tu, player_ml_tu, player_bl_tu],
-
         # Up-Left
         (-1, -1): [player_bl_tu, player_ml_tu, player_tl_tu, player_tt_tu, player_tr_tu]
     }
@@ -214,17 +205,17 @@ while 1:
                                room_w_tu + possible_location_x_tu]
 
         # region debug possible player collision
-        pg.draw.rect(
-            NATIVE_SURF,
-            "yellow",
-            pg.Rect(
-                (possible_location_x_tu * tile_s) - CAM_RECT.x,
-                (possible_location_y_tu * tile_s) - CAM_RECT.y,
-                tile_s,
-                tile_s
-            ),
-            1
-        )
+        # pg.draw.rect(
+        #     NATIVE_SURF,
+        #     "yellow",
+        #     pg.Rect(
+        #         (possible_location_x_tu * tile_s) - CAM_RECT.x,
+        #         (possible_location_y_tu * tile_s) - CAM_RECT.y,
+        #         tile_s,
+        #         tile_s
+        #     ),
+        #     1
+        # )
 
         # No obj nearby, move
         if cell == 0:
@@ -233,63 +224,72 @@ while 1:
         # Found rect?
         possible_collision_tiles_rects_list.append(cell)
 
-        x1 = cell["xds"]
-        y1 = cell["yds"]
-        w1 = x1 + tile_s
-        h1 = y1 + tile_s
-        pg.draw.rect(
-            NATIVE_SURF,
-            "red",
-            pg.Rect(
-                (cell["xds"]) - CAM_RECT.x,
-                (cell["yds"]) - CAM_RECT.y,
-                tile_s,
-                tile_s
-            ),
-            1
-        )
+        # debug draw found rect
+        # x1 = cell["xds"]
+        # y1 = cell["yds"]
+        # w1 = x1 + tile_s
+        # h1 = y1 + tile_s
+        # pg.draw.rect(
+        #     NATIVE_SURF,
+        #     "red",
+        #     pg.Rect(
+        #         (cell["xds"]) - CAM_RECT.x,
+        #         (cell["yds"]) - CAM_RECT.y,
+        #         tile_s,
+        #         tile_s
+        #     ),
+        #     1
+        # )
 
     # Check horizontal
-    PLAYER_FUTURE_RECT.x += direction_x * CAM_SPD
-    # Collide?
-    for cell in possible_collision_tiles_rects_list:
-        x1 = cell["xds"]
-        y1 = cell["yds"]
-        x2 = PLAYER_FUTURE_RECT.x
-        y2 = PLAYER_FUTURE_RECT.y
-        right1, bottom1 = x1 + tile_s, y1 + tile_s
-        right2, bottom2 = x2 + tile_s, y2 + tile_s
-        if right1 > x2 and x1 < right2 and bottom1 > y2 and y1 < bottom2:
-            # Reset check
-            PLAYER_FUTURE_RECT.x -= direction_x * CAM_SPD
-            direction_x = 0
-            break
+    displacement_x = abs(direction_x * CAM_SPD)
+    while displacement_x > 0:
+        PLAYER_FUTURE_RECT.x += direction_x
+        displacement_x -= 1
+        # Collide?
+        for cell in possible_collision_tiles_rects_list:
+            x1 = cell["xds"]
+            y1 = cell["yds"]
+            x2 = PLAYER_FUTURE_RECT.x
+            y2 = PLAYER_FUTURE_RECT.y
+            right1, bottom1 = x1 + tile_s, y1 + tile_s
+            right2, bottom2 = x2 + tile_s, y2 + tile_s
+            if right1 > x2 and x1 < right2 and bottom1 > y2 and y1 < bottom2:
+                # Reset check
+                PLAYER_FUTURE_RECT.x -= direction_x
+                displacement_x = 0
+                direction_x = 0
+                break
 
     # Collide?
-    PLAYER_FUTURE_RECT.y += direction_y * CAM_SPD
-
-    # Collide?
-    for cell in possible_collision_tiles_rects_list:
-        x1 = cell["xds"]
-        y1 = cell["yds"]
-        x2 = PLAYER_FUTURE_RECT.x
-        y2 = PLAYER_FUTURE_RECT.y
-        right1, bottom1 = x1 + tile_s, y1 + tile_s
-        right2, bottom2 = x2 + tile_s, y2 + tile_s
-        if right1 > x2 and x1 < right2 and bottom1 > y2 and y1 < bottom2:
-            # Reset check
-            PLAYER_FUTURE_RECT.y -= direction_y * CAM_SPD
-            direction_y = 0
-            break
+    displacement_y = abs(direction_y * CAM_SPD)
+    while displacement_y > 0:
+        PLAYER_FUTURE_RECT.y += direction_y
+        displacement_y -= 1
+        # Collide?
+        for cell in possible_collision_tiles_rects_list:
+            x1 = cell["xds"]
+            y1 = cell["yds"]
+            x2 = PLAYER_FUTURE_RECT.x
+            y2 = PLAYER_FUTURE_RECT.y
+            right1, bottom1 = x1 + tile_s, y1 + tile_s
+            right2, bottom2 = x2 + tile_s, y2 + tile_s
+            if right1 > x2 and x1 < right2 and bottom1 > y2 and y1 < bottom2:
+                # Reset check
+                PLAYER_FUTURE_RECT.y -= direction_y
+                displacement_y = 0
+                direction_y = 0
+                break
 
     PLAYER_RECT.x += direction_x * CAM_SPD
     PLAYER_RECT.y += direction_y * CAM_SPD
+    PLAYER_RECT.clamp_ip(CAM_RECT)
     # endregion
 
     # debug render player rect and future rect
-    xd = PLAYER_RECT.x - CAM_RECT.x
-    yd = PLAYER_RECT.y - CAM_RECT.y
-    pg.draw.rect(NATIVE_SURF, "blue", (xd, yd, tile_s, tile_s), 1)
+    # xd = PLAYER_RECT.x - CAM_RECT.x
+    # yd = PLAYER_RECT.y - CAM_RECT.y
+    # pg.draw.rect(NATIVE_SURF, "blue", (xd, yd, tile_s, tile_s), 1)
 
     # Get event
     for event in pg.event.get(EVENTS):
