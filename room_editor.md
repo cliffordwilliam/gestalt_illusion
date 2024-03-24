@@ -56,23 +56,29 @@ You draw the same sprite sheet over and over again but with different region
 
 ## Stage 1 layers
 
-| Index | Element     | OK  |
-| ----- | ----------- | --- |
-| 0     | bg_rocks    | OK  |
-| 1     | tall_bush   | OK  |
-| 2     | short_bush  | OK  |
-| 3     | boulders    | OK  |
-| 4     | small_trees | OK  |
-| 5     | wall        | OK  |
-| 6     | pillar      | OK  |
-| 7     | curtain     | OK  |
-| 8     | furnace     | OK  |
-| 9     | furniture   | OK  |
-| 10    | scones      | OK  |
-| 11    | thin        | OK  |
-| 12    | rail        | OK  |
-| 13    | floor       | OK  |
-| 14    | grass       | OK  |
+| Index | Element     | OK  | Type |
+| ----- | ----------- | --- | ---- |
+| 0     | bg_rocks    | OK  | BG   |
+| 1     | tall_bush   | OK  | BG   |
+| 2     | short_bush  | OK  | BG   |
+| 3     | boulders    | OK  | BG   |
+| 4     | small_trees | OK  | BG   |
+| 5     | wall        | OK  | BG   |
+| 6     | pillar      | OK  | BG   |
+| 7     | curtain     | OK  | BG   |
+| 8     | furnace     | OK  | BG   |
+| 9     | furniture   | OK  | BG   |
+| 10    | scones      | OK  | BG   |
+| 11    | thin body   | OK  | BG   |
+| 12    | floor       | OK  | COL  |
+| 13    | rail        | OK  | FG   |
+| 14    | grass       | OK  | FG   |
+
+Draw player between BG and FG transition later in game
+
+Remove all the zeroes from the BG (we do not need to know collision checks for bg)
+
+Only keep the zeroes in the COL type layer, this is the layer where actors check for collision
 
 ## Note
 
