@@ -2,21 +2,27 @@ import pygame as pg
 import pygame.freetype as font
 from sys import exit
 from json import dump
+from json import load
 from os.path import join
 
 pg.init()
 
-# Starts empty
+# Starts with loaded data
 # On save will save both the editor load save and the in game load save
 
 # region Room editor settings
-RESOLUTION = int(input("Enter RESOLUTION: "))
-ROOM_X_RU = int(input("Enter ROOM_X_RU: "))
-ROOM_Y_RU = int(input("Enter ROOM_Y_RU: "))
-ROOM_SCALE_X = int(input("Enter ROOM_SCALE_X: "))
-ROOM_SCALE_Y = int(input("Enter ROOM_SCALE_Y: "))
-STAGE_NO = int(input("Enter STAGE_NO: "))
-ROOM_NAME = input("Enter ROOM_NAME: ")
+room_dict = {}
+ROOM_NAME = input("Load data room name?")
+PATH = join("room_json_data_load", "stage_1", f"{ROOM_NAME}.json")
+with open(PATH, 'r') as json_file:
+    room_dict = load(json_file)
+RESOLUTION = room_dict["RESOLUTION"]
+ROOM_X_RU = room_dict["ROOM_X_RU"]
+ROOM_Y_RU = room_dict["ROOM_Y_RU"]
+ROOM_SCALE_X = room_dict["ROOM_SCALE_X"]
+ROOM_SCALE_Y = room_dict["ROOM_SCALE_Y"]
+STAGE_NO = room_dict["STAGE_NO"]
+ROOM_NAME = room_dict["ROOM_NAME"]
 STAGES = {
     1: {
         "SPRITE_SHEET_PNG_NAME": "stage_1_sprite_sheet.png",
@@ -1084,7 +1090,7 @@ ROOM_H_TU = ROOM_SCALE_Y * NATIVE_H_TU
 ROOM_RECT = pg.Rect(ROOM_X_TU * TILE_S, ROOM_Y_TU * TILE_S,
                     ROOM_W_TU * TILE_S, ROOM_H_TU * TILE_S)
 CAM_RECT.topleft = ROOM_RECT.topleft
-LAYERS_LIST = [[0] * (ROOM_W_TU * ROOM_H_TU) for _ in range(TOTAL_LAYERS)]
+LAYERS_LIST = room_dict["LAYERS_LIST"]
 LIGHT_SURF = pg.Surface((NATIVE_W, NATIVE_H))
 LIGHT_SURF.fill("white")
 LIGHT_SURF.set_alpha(204)
@@ -1226,7 +1232,12 @@ def update_bitmasks(x_tu, y_tu, xds, yds, last=False):
     # In case this tile is from deleted draw, then I cannot update this tile
     if sprite != 0:
         if sprite["name"] in BITMASK_TYPE_SPRITE_NAMES:
-            new_region = sprite["regions"][mask_id]
+            # Hacky solution but json file has it stored in string but mine is in int
+            new_region = []
+            try:
+                new_region = sprite["regions"][str(mask_id)]
+            except:
+                new_region = sprite["regions"][mask_id]
             if new_region != 0:
                 selected_layer[y_tu * ROOM_W_TU + x_tu]["region"] = new_region
 

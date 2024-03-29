@@ -448,3 +448,5 @@ Use tu to talk with collision list
 ```py
 item = selected_layer[y_tu * ROOM_W_TU + x_tu]
 ```
+
+You edit which bg appears in the json manually
