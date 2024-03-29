@@ -12,7 +12,7 @@ pg.init()
 
 # region Room editor settings
 room_dict = {}
-ROOM_NAME = input("Load data room name?")
+ROOM_NAME = input("Load data room name: ")
 PATH = join("room_json_data_load", "stage_1", f"{ROOM_NAME}.json")
 with open(PATH, 'r') as json_file:
     room_dict = load(json_file)
@@ -1011,7 +1011,7 @@ STAGES = {
             },
             {
                 "name": "Door",
-                "id": "",
+                "id": "Left",
                 "target": "",
                 "xds": 0,
                 "yds": 0,
@@ -1020,7 +1020,7 @@ STAGES = {
             },
             {
                 "name": "Door",
-                "id": "",
+                "id": "Right",
                 "target": "",
                 "xds": 0,
                 "yds": 0,
@@ -1029,7 +1029,7 @@ STAGES = {
             },
             {
                 "name": "Door",
-                "id": "",
+                "id": "Up",
                 "target": "",
                 "xds": 0,
                 "yds": 0,
@@ -1038,7 +1038,7 @@ STAGES = {
             },
             {
                 "name": "Door",
-                "id": "",
+                "id": "Down",
                 "target": "",
                 "xds": 0,
                 "yds": 0,
@@ -1606,10 +1606,11 @@ while 1:
                     "ROOM_RECT": [ROOM_RECT.x, ROOM_RECT.y, ROOM_RECT.width, ROOM_RECT.height],
                     "SPRITE_SHEET_PNG_NAME": SPRITE_SHEET_PNG_NAME,
                     "TILE_S": TILE_S,
-                    # TODO: If state 1 was choosed, add the option to select bg either sky, clouds and temple
+                    # TODO: Idk how to do this, just type manually what bg you want
                     "BG1": "sky",
                     "BG2": "clouds",
                     "BG3": "trees",
+                    "BG4": "blue_glow",
                 }
                 with open(SAVE_PATH, "w") as json_file:
                     dump(ROOM_TO_BE_SAVED_DATA, json_file)
@@ -1888,7 +1889,6 @@ while 1:
                     selected_sprite = cell
                     # Handle door select
                     if selected_sprite["name"] == "Door":
-                        selected_sprite["id"] = input("Door name: ")
                         selected_sprite["target"] = input("Door target: ")
                     selected_layer = LAYERS_LIST[selected_sprite["layer_i"]]
                     is_menu = False
